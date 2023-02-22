@@ -1,5 +1,11 @@
 [package]
 name = "naughtyfy"
+description = "Modern fanotify wrapper."
+keywords = ["fanotify","linux", "files","filesystem","monitor"]
+readme = "README.md"
+license = "AGPL"
+repository = "https://github.com/tanveerraza789/naughtyfy.git"
+authors = ["Tanveer Raza <tanveerraza789@gmail.com>"]
 version = "0.1.0"
 edition = "2021"
 
