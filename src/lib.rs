@@ -1,5 +1,5 @@
-mod flags;
-mod errors;
+pub mod flags;
+pub mod errors;
 pub mod low_layer;
 
 #[cfg(test)]
