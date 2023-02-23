@@ -1,6 +1,6 @@
 mod flags;
 mod errors;
-mod low_layer;
+pub mod low_layer;
 
 #[cfg(test)]
 mod tests {
