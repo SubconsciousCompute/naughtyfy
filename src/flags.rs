@@ -57,7 +57,7 @@ pub const FAN_OPEN_EXEC: u64 = 0x00001000; /* File was opened for exec */
 pub const FAN_Q_OVERFLOW: u64 = 0x00004000; /* Event queued overflowed */
 
 /// Represents filesystem error
-pub const FAN_FS_ERROR: u64 = 0x00008000; /* Filesystem error */
+pub const FAN_FS_ERROR: u32 = 0x00008000; /* Filesystem error */
 
 /// Create an event when a permission to open a file or
 /// directory is requested.  An fanotify file descriptor
@@ -124,14 +124,14 @@ pub const FAN_MOVE: u64 = FAN_MOVED_FROM | FAN_MOVED_TO; /* moves */
 /// Set the close-on-exec flag (`FD_CLOEXEC`) on the new file
 /// descriptor.  See the description of the `O_CLOEXEC` flag in
 /// [open(2)](https://man7.org/linux/man-pages/man2/open.2.html).
-pub const FAN_CLOEXEC: u64 = 0x00000001;
+pub const FAN_CLOEXEC: u32 = 0x00000001;
 
 /// Enable the nonblocking flag (`O_NONBLOCK`) for the file
 /// descriptor.  Reading from the file descriptor will not
 /// block.  Instead, if no data is available,
 /// [read(2)](https://man7.org/linux/man-pages/man2/read.2.html)
 /// fails with the error [`EAGAIN`].
-pub const FAN_NONBLOCK: u64 = 0x00000002;
+pub const FAN_NONBLOCK: u32 = 0x00000002;
 
 /* These are NOT bitwise flags.  Both bits are used together.  */
 
@@ -139,7 +139,7 @@ pub const FAN_NONBLOCK: u64 = 0x00000002;
 /// specified.  This value only allows the receipt of events
 /// notifying that a file has been accessed.  Permission
 /// decisions before the file is accessed are not possible.
-pub const FAN_CLASS_NOTIF: u64 = 0x00000000;
+pub const FAN_CLASS_NOTIF: u32 = 0x00000000;
 
 /// This value allows the receipt of events notifying that a
 /// file has been accessed and events for permission decisions
@@ -147,7 +147,7 @@ pub const FAN_CLASS_NOTIF: u64 = 0x00000000;
 /// listeners that need to access files when they already
 /// contain their final content.  This notification class
 /// might be used by malware detection programs, for example.
-pub const FAN_CLASS_CONTENT: u64 = 0x00000004;
+pub const FAN_CLASS_CONTENT: u32 = 0x00000004;
 
 /// This value allows the receipt of events notifying that a
 /// file has been accessed and events for permission decisions
@@ -155,45 +155,45 @@ pub const FAN_CLASS_CONTENT: u64 = 0x00000004;
 /// listeners that need to access files before they contain
 /// their final data.  This notification class might be used
 /// by hierarchical storage managers, for example.
-pub const FAN_CLASS_PRE_CONTENT: u64 = 0x00000008;
+pub const FAN_CLASS_PRE_CONTENT: u32 = 0x00000008;
 
 /* Deprecated - do not use this in programs and do not add new flags here! */
 #[deprecated(note = "do not use this in programs!")]
-pub const FAN_ALL_CLASS_BITS: u64 = FAN_CLASS_NOTIF | FAN_CLASS_CONTENT | FAN_CLASS_PRE_CONTENT;
+pub const FAN_ALL_CLASS_BITS: u32 = FAN_CLASS_NOTIF | FAN_CLASS_CONTENT | FAN_CLASS_PRE_CONTENT;
 
 /// Remove the limit of 16384 events for the event queue.  Use
 /// of this flag requires the `CAP_SYS_ADMIN` capability.
-pub const FAN_UNLIMITED_QUEUE: u64 = 0x00000010;
+pub const FAN_UNLIMITED_QUEUE: u32 = 0x00000010;
 
 /// Remove the limit of 8192 marks.  Use of this flag requires
 /// the `CAP_SYS_ADMIN` capability.
-pub const FAN_UNLIMITED_MARKS: u64 = 0x00000020;
+pub const FAN_UNLIMITED_MARKS: u32 = 0x00000020;
 
 /// Enable generation of audit log records about access
 /// mediation performed by permission events.  The permission
 /// event response has to be marked with the `FAN_AUDIT` flag
 /// for an audit log record to be generated.
-pub const FAN_ENABLE_AUDIT: u64 = 0x00000040;
+pub const FAN_ENABLE_AUDIT: u32 = 0x00000040;
 
 /* Flags to determine fanotify event format */
-pub const FAN_REPORT_PIDFD: u64 = 0x00000080; /* Report pidfd for event->pid */
-pub const FAN_REPORT_TID: u64 = 0x00000100; /* event->pid is thread id */
-pub const FAN_REPORT_FID: u64 = 0x00000200; /* Report unique file id */
-pub const FAN_REPORT_DIR_FID: u64 = 0x00000400; /* Report unique directory id */
-pub const FAN_REPORT_NAME: u64 = 0x00000800; /* Report events with name */
-pub const FAN_REPORT_TARGET_FID: u64 = 0x00001000; /* Report dirent target id  */
+pub const FAN_REPORT_PIDFD: u32 = 0x00000080; /* Report pidfd for event->pid */
+pub const FAN_REPORT_TID: u32 = 0x00000100; /* event->pid is thread id */
+pub const FAN_REPORT_FID: u32 = 0x00000200; /* Report unique file id */
+pub const FAN_REPORT_DIR_FID: u32 = 0x00000400; /* Report unique directory id */
+pub const FAN_REPORT_NAME: u32 = 0x00000800; /* Report events with name */
+pub const FAN_REPORT_TARGET_FID: u32 = 0x00001000; /* Report dirent target id  */
 
 /// Convenience macro - [`FAN_REPORT_NAME`] requires [`FAN_REPORT_DIR_FID`]
-pub const FAN_REPORT_DFID_NAME: u64 = FAN_REPORT_DIR_FID | FAN_REPORT_NAME;
+pub const FAN_REPORT_DFID_NAME: u32 = FAN_REPORT_DIR_FID | FAN_REPORT_NAME;
 
 /// Convenience macro - [`FAN_REPORT_TARGET_FID`] requires all other FID flags
 /// ([`FAN_REPORT_DFID_NAME`], [`FAN_REPORT_FID`] , [`FAN_REPORT_TARGET_FID`])
-pub const FAN_REPORT_DFID_NAME_TARGET: u64 =
+pub const FAN_REPORT_DFID_NAME_TARGET: u32 =
     FAN_REPORT_DFID_NAME | FAN_REPORT_FID | FAN_REPORT_TARGET_FID;
 
 /* Deprecated - do not use this in programs and do not add new flags here! */
 #[deprecated(note = "do not use this in programs!")]
-pub const FAN_ALL_INIT_FLAGS: u64 =
+pub const FAN_ALL_INIT_FLAGS: u32 =
     FAN_CLOEXEC | FAN_NONBLOCK | FAN_ALL_CLASS_BITS | FAN_UNLIMITED_QUEUE | FAN_UNLIMITED_MARKS;
 
 /* flags used for fanotify_modify_mark() */
@@ -201,32 +201,32 @@ pub const FAN_ALL_INIT_FLAGS: u64 =
 /// The events in mask will be added to the mark mask (or to
 /// the ignore mask).  mask must be nonempty or the error
 /// [`EINVAL`] will occur.
-pub const FAN_MARK_ADD: u64 = 0x00000001;
+pub const FAN_MARK_ADD: u32 = 0x00000001;
 
 /// The events in argument mask will be removed from the mark
 /// mask (or from the ignore mask).  mask must be nonempty or
 /// the error [`EINVAL`] will occur.
-pub const FAN_MARK_REMOVE: u64 = 0x00000002;
+pub const FAN_MARK_REMOVE: u32 = 0x00000002;
 
 /// If pathname is a symbolic link, mark the link itself,
 /// rather than the file to which it refers.  (By default,
 /// `fanotify_mark()` dereferences pathname if it is a symbolic
 /// link.)
-pub const FAN_MARK_DONT_FOLLOW: u64 = 0x00000004;
+pub const FAN_MARK_DONT_FOLLOW: u32 = 0x00000004;
 
 /// If the filesystem object to be marked is not a directory,
 /// the error [`ENOTDIR`] shall be raised.
-pub const FAN_MARK_ONLYDIR: u64 = 0x00000008;
+pub const FAN_MARK_ONLYDIR: u32 = 0x00000008;
 
 /* FAN_MARK_MOUNT is		0x00000010 */
 /// The events in mask shall be added to or removed from the
 /// ignore mask.
-pub const FAN_MARK_IGNORED_MASK: u64 = 0x00000020;
+pub const FAN_MARK_IGNORED_MASK: u32 = 0x00000020;
 
 /// The ignore mask shall survive modify events.  If this flag
 /// is not set, the ignore mask is cleared when a modify event
 /// occurs for the ignored file or directory.
-pub const FAN_MARK_IGNORED_SURV_MODIFY: u64 = 0x00000040;
+pub const FAN_MARK_IGNORED_SURV_MODIFY: u32 = 0x00000040;
 
 /// Remove either all marks for filesystems, all marks for
 /// mounts, or all marks for directories and files from the
@@ -238,21 +238,21 @@ pub const FAN_MARK_IGNORED_SURV_MODIFY: u64 = 0x00000040;
 /// and at most one of, the flags [`FAN_MARK_MOUNT`] or
 /// [`FAN_MARK_FILESYSTEM`] can be used in conjunction with
 /// [`FAN_MARK_FLUSH`].  mask is ignored.
-pub const FAN_MARK_FLUSH: u64 = 0x00000080;
+pub const FAN_MARK_FLUSH: u32 = 0x00000080;
 
 /* FAN_MARK_FILESYSTEM is	0x00000100 */
 
-pub const FAN_MARK_EVICTABLE: u64 = 0x00000200;
+pub const FAN_MARK_EVICTABLE: u32 = 0x00000200;
 
 /// This bit is mutually exclusive with [`FAN_MARK_IGNORED_MASK`] bit.
 /// When using FAN_MARK_IGNORE for the first time, mark starts using
 /// independent event flags in ignore mask.  After that, trying to
 /// update the ignore mask with the old [`FAN_MARK_IGNORED_MASK`] API
 /// will result in [`EEXIST`] error.
-pub const FAN_MARK_IGNORE: u64 = 0x00000400;
+pub const FAN_MARK_IGNORE: u32 = 0x00000400;
 
 /* These are NOT bitwise flags.  Both bits can be used togther.  */
-pub const FAN_MARK_INODE: u64 = 0x00000000;
+pub const FAN_MARK_INODE: u32 = 0x00000000;
 
 /// Mark the mount specified by pathname.  If pathname is not
 /// itself a mount point, the mount containing pathname will
@@ -264,21 +264,21 @@ pub const FAN_MARK_INODE: u64 = 0x00000000;
 /// provided as a mask when flags contains [`FAN_MARK_MOUNT`].
 /// Attempting to do so will result in the error EINVAL being
 /// returned.
-pub const FAN_MARK_MOUNT: u64 = 0x00000010;
+pub const FAN_MARK_MOUNT: u32 = 0x00000010;
 
 /// Mark the filesystem specified by pathname.  The filesystem
 /// containing pathname will be marked.  All the contained
 /// files and directories of the filesystem from any mount
 /// point will be monitored.
-pub const FAN_MARK_FILESYSTEM: u64 = 0x00000100;
+pub const FAN_MARK_FILESYSTEM: u32 = 0x00000100;
 
 /// Convenience macro - [`FAN_MARK_IGNORE`] requires [`FAN_MARK_IGNORED_SURV_MODIFY`]
 /// for non-inode mark types.
-pub const FAN_MARK_IGNORE_SURV: u64 = FAN_MARK_IGNORE | FAN_MARK_IGNORED_SURV_MODIFY;
+pub const FAN_MARK_IGNORE_SURV: u32 = FAN_MARK_IGNORE | FAN_MARK_IGNORED_SURV_MODIFY;
 
 /* Deprecated - do not use this in programs and do not add new flags here! */
 #[deprecated(note = "do not use this in programs!")]
-pub const FAN_ALL_MARK_FLAGS: u64 = FAN_MARK_ADD
+pub const FAN_ALL_MARK_FLAGS: u32 = FAN_MARK_ADD
     | FAN_MARK_REMOVE
     | FAN_MARK_DONT_FOLLOW
     | FAN_MARK_ONLYDIR
@@ -307,4 +307,4 @@ pub const FAN_ALL_OUTGOING_EVENTS: u64 = FAN_ALL_EVENTS | FAN_ALL_PERM_EVENTS | 
 /// structures defined at compile time.  In case of a
 /// mismatch, the application should abandon trying to use the
 /// fanotify file descriptor.
-pub const FANOTIFY_METADATA_VERSION: u64 = 3;
+pub const FANOTIFY_METADATA_VERSION: u32 = 3;
