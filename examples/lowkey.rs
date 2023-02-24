@@ -1,6 +1,6 @@
 use libc::AT_FDCWD;
-use naughtyfy::flags::*;
 use naughtyfy::api::*;
+use naughtyfy::flags::*;
 
 fn main() {
     unsafe {

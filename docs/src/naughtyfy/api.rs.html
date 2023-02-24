@@ -184,6 +184,7 @@
 <a href="#184" id="184">184</a>
 <a href="#185" id="185">185</a>
 <a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Low level function mapping for fanotify
 //!
 </span><span class="kw">use </span>libc::c_void;
@@ -245,6 +246,7 @@
 ///
 /// # Example
 /// ```
+/// # use std::ffi::OsStr;
 /// # pub trait Path {
 /// # fn as_os_str(&amp;self) -&gt; &amp;OsStr;
 /// # }
@@ -318,8 +320,8 @@
 /// # #[should_panic]
 /// # fn ex() {
 ///     # use naughtyfy::flags::*;
-///     # use naughtyfy::structs::*;
-///     # use naughtyfy::low_api::*;
+///     # use naughtyfy::types::*;
+///     # use naughtyfy::api::*;
 ///     let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
 ///     fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, &quot;./&quot;);
 /// # }
