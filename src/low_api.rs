@@ -59,13 +59,9 @@ lazy_static! {
 pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, Error> {
     unsafe {
         match libc::fanotify_init(flags, event_f_flags) {
-            -1 => {
-                return Err(Error::last_os_error());
-            }
-            fd => {
-                return Ok(fd);
-            }
-        };
+            -1 => Err(Error::last_os_error()),
+            fd => Ok(fd),
+        }
     }
 }
 
@@ -111,12 +107,8 @@ pub fn fanotify_mark<P: ?Sized + FanotifyPath>(
                 .collect::<Vec<i8>>()
                 .as_ptr(),
         ) {
-            0 => {
-                return Ok(());
-            }
-            _ => {
-                return Err(Error::last_os_error());
-            }
+            0 => Ok(()),
+            _ => Err(Error::last_os_error()),
         }
     }
 }

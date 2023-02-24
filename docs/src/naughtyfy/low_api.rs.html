@@ -135,14 +135,6 @@
 <a href="#135" id="135">135</a>
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
 </pre><pre class="rust"><code><span class="kw">use </span>lazy_static::lazy_static;
 
 <span class="kw">use </span><span class="kw">crate</span>::structs::<span class="kw-2">*</span>;
@@ -204,13 +196,9 @@
 </span><span class="kw">pub fn </span>fanotify_init(flags: u32, event_f_flags: u32) -&gt; <span class="prelude-ty">Result</span>&lt;i32, Error&gt; {
     <span class="kw">unsafe </span>{
         <span class="kw">match </span>libc::fanotify_init(flags, event_f_flags) {
-            -<span class="number">1 </span>=&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::last_os_error());
-            }
-            fd =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(fd);
-            }
-        };
+            -<span class="number">1 </span>=&gt; <span class="prelude-val">Err</span>(Error::last_os_error()),
+            fd =&gt; <span class="prelude-val">Ok</span>(fd),
+        }
     }
 }
 
@@ -256,12 +244,8 @@
                 .collect::&lt;Vec&lt;i8&gt;&gt;()
                 .as_ptr(),
         ) {
-            <span class="number">0 </span>=&gt; {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-            }
-            <span class="kw">_ </span>=&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::last_os_error());
-            }
+            <span class="number">0 </span>=&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::last_os_error()),
         }
     }
 }
