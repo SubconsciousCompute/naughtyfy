@@ -1,17 +1,5 @@
-//! Calling read(2) for the file descriptor returned by
-//! fanotify_init(2) blocks (if the flag FAN_NONBLOCK is not
-//! specified in the call to fanotify_init(2)) until either a file
-//! event occurs or the call is interrupted by a signal (see
-//! signal(7)).
-//!
-//! The use of one of the flags FAN_REPORT_FID, FAN_REPORT_DIR_FID in
-//! fanotify_init(2) influences what data structures are returned to
-//! the event listener for each event.  Events reported to a group
-//! initialized with one of these flags will use file handles to
-//! identify filesystem objects instead of file descriptors.
-//!
-//! After a successful read(2), the read buffer contains one or more
-//! of the following structures:
+//! Contains all the necessary structs 
+//! needed for fanotify to work
 
 use libc::{__s32, __u16, __u32, __u64, __u8, c_int};
 
