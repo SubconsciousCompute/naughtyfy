@@ -14,7 +14,7 @@ pub struct fanotify_event_metadata {
     /// This is the length of the data for the current event and
     /// the offset to the next event in the buffer.  Unless the
     /// group identifies filesystem objects by file handles, the
-    /// value of event_len is always [`struct@crate::low_api::FAN_EVENT_METADATA_LEN`].  For
+    /// value of event_len is always `FAN_EVENT_METADATA_LEN`.  For
     /// a group that identifies filesystem objects by file
     /// handles, event_len also includes the variable length file
     /// identifier records.

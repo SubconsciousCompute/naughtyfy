@@ -1,3 +1,0 @@
-(function() {var implementors = {
-"naughtyfy":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.67.1/core/ops/deref/trait.Deref.html\" title=\"trait core::ops::deref::Deref\">Deref</a> for <a class=\"struct\" href=\"naughtyfy/low_api/struct.FAN_EVENT_METADATA_LEN.html\" title=\"struct naughtyfy::low_api::FAN_EVENT_METADATA_LEN\">FAN_EVENT_METADATA_LEN</a>"]]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
