@@ -20,5 +20,5 @@ jobs:
       run: cargo build --verbose
     - name: Lints
       run: cargo clippy -- -Dwarnings
-      name: Test
+    - name: Test
       run: cargo test --release
