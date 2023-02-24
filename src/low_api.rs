@@ -50,12 +50,6 @@ lazy_static! {
 /// * O_CLOEXEC (since Linux 3.18)
 ///
 /// The following are also allowable: `O_APPEND`, `O_DSYNC`, `O_NOATIME`,`O_NONBLOCK`, and `O_SYNC`.  Specifying any other flag in `event_f_flags` yields the error `EINVAL`.
-/// # Examples
-/// ```
-/// use naughtyfy::low_layer::*;
-/// let fd = fanotify_init(FAN_CLASS_NOTIF, O_RDONLY).unwrap();
-/// assert!(fd > 0)
-/// ```
 pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, Error> {
     unsafe {
         match libc::fanotify_init(flags, event_f_flags) {
