@@ -1,4 +1,4 @@
-//! Contains all the necessary structs 
+//! Contains all the necessary structs
 //! needed for fanotify to work
 
 use libc::{__s32, __u16, __u32, __u64, __u8, c_int};
@@ -36,15 +36,15 @@ pub struct fanotify_event_metadata {
     pub mask: __u64,
     /// This is an open file descriptor for the object being accessed,or FAN_NOFD if a queue overflow occurred.  
     /// If the fanotify file descriptor has been initialized using FAN_REPORT_FID,
-    /// applications should expect this value to be set to FAN_NOFD 
+    /// applications should expect this value to be set to FAN_NOFD
     /// for each event that is received.  The file descriptor can be
-    /// used to access the contents of the monitored file or directory. 
+    /// used to access the contents of the monitored file or directory.
     /// The reading application is responsible for closing this file descriptor.
     /// When calling fanotify_init(2), the caller may specify (via the event_f_flags argument)
-    /// various file status flags that are to be set on the open file description that 
-    /// corresponds to this file descriptor.  In addition, the (kernel-internal) 
+    /// various file status flags that are to be set on the open file description that
+    /// corresponds to this file descriptor.  In addition, the (kernel-internal)
     /// FMODE_NONOTIFY file status flag is set on the open file description.  
-    /// This flag suppresses fanotify event generation. Hence, 
+    /// This flag suppresses fanotify event generation. Hence,
     /// when the receiver of the fanotify event accesses the notified file or directory using this file descriptor,
     /// noadditional events will be created.
     pub fd: __s32,
@@ -61,7 +61,6 @@ struct __kernel_fsid_t {
     #[allow(dead_code)]
     val: [c_int; 2],
 }
-
 
 /// In case of an fanotify group that identifies filesystem objects
 /// by file handles, you should also expect to receive one or more

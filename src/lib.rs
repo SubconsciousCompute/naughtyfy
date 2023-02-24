@@ -1,6 +1,6 @@
+pub mod api;
 pub mod errors;
 pub mod flags;
-pub mod api;
 pub mod types;
 
 #[cfg(test)]

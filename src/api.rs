@@ -59,6 +59,7 @@ pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, Error> {
 ///
 /// # Example
 /// ```
+/// # use std::ffi::OsStr;
 /// # pub trait Path {
 /// # fn as_os_str(&self) -> &OsStr;
 /// # }
@@ -132,8 +133,8 @@ impl Path for String {
 /// # #[should_panic]
 /// # fn ex() {
 ///     # use naughtyfy::flags::*;
-///     # use naughtyfy::structs::*;
-///     # use naughtyfy::low_api::*;
+///     # use naughtyfy::types::*;
+///     # use naughtyfy::api::*;
 ///     let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
 ///     fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
 /// # }
