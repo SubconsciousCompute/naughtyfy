@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["errors",""],["flags","1-1 mapping of all flags that fanotify.h has"],["low_api",""],["structs","Calling read(2) for the file descriptor returned by fanotify_init(2) blocks (if the flag FAN_NONBLOCK is not specified in the call to fanotify_init(2)) until either a file event occurs or the call is interrupted by a signal (see signal(7))."]]};
