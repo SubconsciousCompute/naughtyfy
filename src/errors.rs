@@ -94,6 +94,6 @@ impl fmt::Display for FanotifyInitError {
             _ => "Unknown error occured."
         };
 
-        write!(f, "{}", err_msg)
+        write!(f, "{err_msg}")
     }
 }

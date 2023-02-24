@@ -1,19 +1,16 @@
 //! Low level function mapping for fanotify
 //!
-use lazy_static::lazy_static;
 use libc::c_void;
 
-use crate::structs::*;
+use crate::types::*;
 use std::ffi::{CString, OsStr};
 use std::io::Error;
 use std::mem;
 use std::os::unix::ffi::OsStrExt;
 use std::slice;
 
-lazy_static! {
-    /// Get current platform sizeof of fanotify_event_metadata.
-    pub static ref FAN_EVENT_METADATA_LEN: usize = mem::size_of::<fanotify_event_metadata>();
-}
+/// Get current platform sizeof of fanotify_event_metadata.
+const FAN_EVENT_METADATA_LEN: usize = mem::size_of::<fanotify_event_metadata>();
 
 /// Length of memory to be allocated for read buffer
 pub static mut FAN_EVENT_BUFFER_LEN: usize = 250;
@@ -162,19 +159,19 @@ pub fn fanotify_mark<P: ?Sized + Path>(
 pub fn fanotify_read(fanotify_fd: i32) -> Result<Vec<fanotify_event_metadata>, Error> {
     let mut vec = Vec::new();
     unsafe {
-        let buffer = libc::malloc(*FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN);
+        let buffer = libc::malloc(FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN);
         if buffer == libc::PT_NULL as *mut c_void {
             return Err(Error::last_os_error());
         }
         let sizeof = libc::read(
             fanotify_fd,
             buffer,
-            *FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN,
+            FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN,
         );
         if sizeof != libc::EAGAIN as isize && sizeof > 0 {
             let src = slice::from_raw_parts(
                 buffer as *mut fanotify_event_metadata,
-                sizeof as usize / *FAN_EVENT_METADATA_LEN,
+                sizeof as usize / FAN_EVENT_METADATA_LEN,
             );
             vec = src.to_vec();
         }

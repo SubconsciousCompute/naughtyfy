@@ -1,4 +1,4 @@
 var sourcesIndex = JSON.parse('{\
-"naughtyfy":["",[],["errors.rs","flags.rs","lib.rs","low_api.rs","structs.rs"]]\
+"naughtyfy":["",[],["api.rs","errors.rs","flags.rs","lib.rs","types.rs"]]\
 }');
 createSourceSidebar();
