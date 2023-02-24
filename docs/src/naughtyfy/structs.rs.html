@@ -147,32 +147,8 @@
 <a href="#147" id="147">147</a>
 <a href="#148" id="148">148</a>
 <a href="#149" id="149">149</a>
-<a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
-<a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
-<a href="#156" id="156">156</a>
-<a href="#157" id="157">157</a>
-<a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-</pre><pre class="rust"><code><span class="doccomment">//! Calling read(2) for the file descriptor returned by
-//! fanotify_init(2) blocks (if the flag FAN_NONBLOCK is not
-//! specified in the call to fanotify_init(2)) until either a file
-//! event occurs or the call is interrupted by a signal (see
-//! signal(7)).
-//!
-//! The use of one of the flags FAN_REPORT_FID, FAN_REPORT_DIR_FID in
-//! fanotify_init(2) influences what data structures are returned to
-//! the event listener for each event.  Events reported to a group
-//! initialized with one of these flags will use file handles to
-//! identify filesystem objects instead of file descriptors.
-//!
-//! After a successful read(2), the read buffer contains one or more
-//! of the following structures:
+</pre><pre class="rust"><code><span class="doccomment">//! Contains all the necessary structs 
+//! needed for fanotify to work
 
 </span><span class="kw">use </span>libc::{__s32, __u16, __u32, __u64, __u8, c_int};
 
