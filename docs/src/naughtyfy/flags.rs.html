@@ -320,10 +320,16 @@
 <a href="#320" id="320">320</a>
 <a href="#321" id="321">321</a>
 <a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
 </pre><pre class="rust"><code><span class="doccomment">//! 1-1 mapping of all flags that [fanotify.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/fanotify.h) has
 
 </span><span class="kw">extern crate </span>libc;
-<span class="kw">use </span>libc::{EAGAIN, EEXIST, EINVAL, ENOTDIR};
+<span class="comment">// For documentaton linking
+</span><span class="attr">#[allow(unused_imports)]
+</span><span class="kw">use </span>libc::{EAGAIN, EEXIST, EINVAL, ENOTDIR};
 <span class="comment">/* the following events that user-space can register for */
 
 </span><span class="doccomment">/// Create an event when a file or directory (but see [BUGS](https://man7.org/linux/man-pages/man2/fanotify_mark.2.html#BUGS)) is
@@ -527,6 +533,7 @@
 
 <span class="comment">/* Deprecated - do not use this in programs and do not add new flags here! */
 </span><span class="attr">#[deprecated(note = <span class="string">&quot;do not use this in programs!&quot;</span>)]
+#[allow(deprecated)] </span><span class="comment">// only allowing it because of 1-1 mapping
 </span><span class="kw">pub const </span>FAN_ALL_INIT_FLAGS: u32 =
     FAN_CLOEXEC | FAN_NONBLOCK | FAN_ALL_CLASS_BITS | FAN_UNLIMITED_QUEUE | FAN_UNLIMITED_MARKS;
 
@@ -634,6 +641,7 @@
 
 <span class="comment">/* Deprecated - do not use this in programs and do not add new flags here! */
 </span><span class="attr">#[deprecated(note = <span class="string">&quot;do not use this in programs!&quot;</span>)]
+#[allow(deprecated)] </span><span class="comment">// only allowing it because of 1-1 mapping
 </span><span class="kw">pub const </span>FAN_ALL_OUTGOING_EVENTS: u64 = FAN_ALL_EVENTS | FAN_ALL_PERM_EVENTS | FAN_Q_OVERFLOW;
 
 <span class="doccomment">/// Compare [`fanotify_event_metadata.vers`] to verify

@@ -1,6 +1,8 @@
 //! 1-1 mapping of all flags that [fanotify.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/fanotify.h) has
 
 extern crate libc;
+// For documentaton linking
+#[allow(unused_imports)]
 use libc::{EAGAIN, EEXIST, EINVAL, ENOTDIR};
 /* the following events that user-space can register for */
 
@@ -205,6 +207,7 @@ pub const FAN_REPORT_DFID_NAME_TARGET: u32 =
 
 /* Deprecated - do not use this in programs and do not add new flags here! */
 #[deprecated(note = "do not use this in programs!")]
+#[allow(deprecated)] // only allowing it because of 1-1 mapping
 pub const FAN_ALL_INIT_FLAGS: u32 =
     FAN_CLOEXEC | FAN_NONBLOCK | FAN_ALL_CLASS_BITS | FAN_UNLIMITED_QUEUE | FAN_UNLIMITED_MARKS;
 
@@ -312,6 +315,7 @@ pub const FAN_ALL_PERM_EVENTS: u64 = FAN_OPEN_PERM | FAN_ACCESS_PERM;
 
 /* Deprecated - do not use this in programs and do not add new flags here! */
 #[deprecated(note = "do not use this in programs!")]
+#[allow(deprecated)] // only allowing it because of 1-1 mapping
 pub const FAN_ALL_OUTGOING_EVENTS: u64 = FAN_ALL_EVENTS | FAN_ALL_PERM_EVENTS | FAN_Q_OVERFLOW;
 
 /// Compare [`fanotify_event_metadata.vers`] to verify
