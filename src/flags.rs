@@ -171,9 +171,21 @@ pub const FAN_UNLIMITED_MARKS: u32 = 0x00000020;
 
 /// Enable generation of audit log records about access
 /// mediation performed by permission events.  The permission
-/// event response has to be marked with the `FAN_AUDIT` flag
+/// event response has to be marked with the [`FAN_AUDIT`] flag
 /// for an audit log record to be generated.
 pub const FAN_ENABLE_AUDIT: u32 = 0x00000040;
+
+/// Allow the file operation.
+pub const FAN_ALLOW: u32 = 0x01;
+
+/// Deny the file operation.
+pub const FAN_DENY: u32 = 0x02;
+
+/// Bit mask to create audit record for result
+pub const FAN_AUDIT: u32 = 0x10;
+
+/// Indicates a queue overflow.
+pub const FAN_NOFD: i32 = -1;
 
 /* Flags to determine fanotify event format */
 pub const FAN_REPORT_PIDFD: u32 = 0x00000080; /* Report pidfd for event->pid */
