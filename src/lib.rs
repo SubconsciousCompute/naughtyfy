@@ -1,6 +1,7 @@
 pub mod flags;
 pub mod errors;
-pub mod low_layer;
+pub mod low_api;
+pub mod structs;
 
 #[cfg(test)]
 mod tests {
