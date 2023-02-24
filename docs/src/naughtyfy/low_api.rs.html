@@ -187,19 +187,17 @@
 <a href="#187" id="187">187</a>
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Low level function mapping for fanotify
 //!
 </span><span class="kw">use </span>lazy_static::lazy_static;
 <span class="kw">use </span>libc::c_void;
 
 <span class="kw">use </span><span class="kw">crate</span>::structs::<span class="kw-2">*</span>;
-<span class="kw">use </span>std::{io::Error, mem, os::unix::ffi::OsStrExt, slice};
+<span class="kw">use </span>std::ffi::{CString, OsStr};
+<span class="kw">use </span>std::io::Error;
+<span class="kw">use </span>std::mem;
+<span class="kw">use </span>std::os::unix::ffi::OsStrExt;
+<span class="kw">use </span>std::slice;
 
 <span class="macro">lazy_static! </span>{
     <span class="doccomment">/// Get current platform sizeof of fanotify_event_metadata.
@@ -248,18 +246,18 @@
     }
 }
 
-<span class="doccomment">/// Converts the implemented types to [`std::ffi::OsStr`] using `as_os_str()` method. &lt;br&gt;
+<span class="doccomment">/// Converts the implemented types to [`OsStr`] using `as_os_str()` method. &lt;br&gt;
 /// This is *NOT* [`std::path::Path`]
 ///
 /// # Example
 /// ```
 /// # pub trait Path {
-/// # fn as_os_str(&amp;self) -&gt; &amp;std::ffi::OsStr;
+/// # fn as_os_str(&amp;self) -&gt; &amp;OsStr;
 /// # }
 /// #
 /// # impl Path for str {
-/// #     fn as_os_str(&amp;self) -&gt; &amp;std::ffi::OsStr {
-/// #         std::ffi::OsStr::new(self)
+/// #     fn as_os_str(&amp;self) -&gt; &amp;OsStr {
+/// #         OsStr::new(self)
 /// #     }
 /// # }
 /// let path = std::path::Path::new(&quot;/usr/bin&quot;);
@@ -267,24 +265,24 @@
 /// assert_eq!(ostr,&quot;/usr/bin&quot;);
 /// ```
 </span><span class="kw">pub trait </span>Path {
-    <span class="kw">fn </span>as_os_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>std::ffi::OsStr;
+    <span class="kw">fn </span>as_os_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>OsStr;
 }
 
 <span class="kw">impl </span>Path <span class="kw">for </span>std::path::Path {
-    <span class="kw">fn </span>as_os_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>std::ffi::OsStr {
+    <span class="kw">fn </span>as_os_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>OsStr {
         <span class="self">self</span>.as_os_str()
     }
 }
 
 <span class="kw">impl </span>Path <span class="kw">for </span>str {
-    <span class="kw">fn </span>as_os_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>std::ffi::OsStr {
-        std::ffi::OsStr::new(<span class="self">self</span>)
+    <span class="kw">fn </span>as_os_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>OsStr {
+        OsStr::new(<span class="self">self</span>)
     }
 }
 
 <span class="kw">impl </span>Path <span class="kw">for </span>String {
-    <span class="kw">fn </span>as_os_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>std::ffi::OsStr {
-        std::ffi::OsStr::new(<span class="self">self</span>.as_str())
+    <span class="kw">fn </span>as_os_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>OsStr {
+        OsStr::new(<span class="self">self</span>.as_str())
     }
 }
 
@@ -319,10 +317,10 @@
 ///   then the filesystem object to be marked is determined by
 ///   interpreting pathname relative to the current working
 ///   directory.
-/// 
-/// # Example 
-/// This example will panic because of [capabilities](https://man7.org/linux/man-pages/man7/capabilities.7.html) 
-/// ```rust 
+///
+/// # Example
+/// This example will panic because of [capabilities](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// ```rust
 /// # #[should_panic]
 /// # fn ex() {
 ///     # use naughtyfy::flags::*;
@@ -331,7 +329,7 @@
 ///     let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
 ///     fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, &quot;./&quot;);
 /// # }
-/// ``` 
+/// ```
 </span><span class="kw">pub fn </span>fanotify_mark&lt;P: <span class="question-mark">?</span>Sized + Path&gt;(
     fanotify_fd: i32,
     flags: u32,
@@ -340,18 +338,8 @@
     path: <span class="kw-2">&amp;</span>P,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
     <span class="kw">unsafe </span>{
-        <span class="kw">match </span>libc::fanotify_mark(
-            fanotify_fd,
-            flags,
-            mask,
-            dirfd,
-            path.as_os_str()
-                .as_bytes()
-                .iter()
-                .map(|p| <span class="kw-2">*</span>p <span class="kw">as </span>i8)
-                .collect::&lt;Vec&lt;i8&gt;&gt;()
-                .as_ptr(),
-        ) {
+        <span class="kw">let </span>path = CString::new(path.as_os_str().as_bytes())<span class="question-mark">?</span>;
+        <span class="kw">match </span>libc::fanotify_mark(fanotify_fd, flags, mask, dirfd, path.as_ptr()) {
             <span class="number">0 </span>=&gt; <span class="prelude-val">Ok</span>(()),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::last_os_error()),
         }
