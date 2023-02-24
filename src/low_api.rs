@@ -4,7 +4,11 @@ use lazy_static::lazy_static;
 use libc::c_void;
 
 use crate::structs::*;
-use std::{io::Error, mem, os::unix::ffi::OsStrExt, slice};
+use std::ffi::{CString, OsStr};
+use std::io::Error;
+use std::mem;
+use std::os::unix::ffi::OsStrExt;
+use std::slice;
 
 lazy_static! {
     /// Get current platform sizeof of fanotify_event_metadata.
@@ -53,18 +57,18 @@ pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, Error> {
     }
 }
 
-/// Converts the implemented types to [`std::ffi::OsStr`] using `as_os_str()` method. <br>
+/// Converts the implemented types to [`OsStr`] using `as_os_str()` method. <br>
 /// This is *NOT* [`std::path::Path`]
 ///
 /// # Example
 /// ```
 /// # pub trait Path {
-/// # fn as_os_str(&self) -> &std::ffi::OsStr;
+/// # fn as_os_str(&self) -> &OsStr;
 /// # }
 /// #
 /// # impl Path for str {
-/// #     fn as_os_str(&self) -> &std::ffi::OsStr {
-/// #         std::ffi::OsStr::new(self)
+/// #     fn as_os_str(&self) -> &OsStr {
+/// #         OsStr::new(self)
 /// #     }
 /// # }
 /// let path = std::path::Path::new("/usr/bin");
@@ -72,24 +76,24 @@ pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, Error> {
 /// assert_eq!(ostr,"/usr/bin");
 /// ```
 pub trait Path {
-    fn as_os_str(&self) -> &std::ffi::OsStr;
+    fn as_os_str(&self) -> &OsStr;
 }
 
 impl Path for std::path::Path {
-    fn as_os_str(&self) -> &std::ffi::OsStr {
+    fn as_os_str(&self) -> &OsStr {
         self.as_os_str()
     }
 }
 
 impl Path for str {
-    fn as_os_str(&self) -> &std::ffi::OsStr {
-        std::ffi::OsStr::new(self)
+    fn as_os_str(&self) -> &OsStr {
+        OsStr::new(self)
     }
 }
 
 impl Path for String {
-    fn as_os_str(&self) -> &std::ffi::OsStr {
-        std::ffi::OsStr::new(self.as_str())
+    fn as_os_str(&self) -> &OsStr {
+        OsStr::new(self.as_str())
     }
 }
 
@@ -124,10 +128,10 @@ impl Path for String {
 ///   then the filesystem object to be marked is determined by
 ///   interpreting pathname relative to the current working
 ///   directory.
-/// 
-/// # Example 
-/// This example will panic because of [capabilities](https://man7.org/linux/man-pages/man7/capabilities.7.html) 
-/// ```rust 
+///
+/// # Example
+/// This example will panic because of [capabilities](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// ```rust
 /// # #[should_panic]
 /// # fn ex() {
 ///     # use naughtyfy::flags::*;
@@ -136,7 +140,7 @@ impl Path for String {
 ///     let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
 ///     fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
 /// # }
-/// ``` 
+/// ```
 pub fn fanotify_mark<P: ?Sized + Path>(
     fanotify_fd: i32,
     flags: u32,
@@ -145,18 +149,8 @@ pub fn fanotify_mark<P: ?Sized + Path>(
     path: &P,
 ) -> Result<(), Error> {
     unsafe {
-        match libc::fanotify_mark(
-            fanotify_fd,
-            flags,
-            mask,
-            dirfd,
-            path.as_os_str()
-                .as_bytes()
-                .iter()
-                .map(|p| *p as i8)
-                .collect::<Vec<i8>>()
-                .as_ptr(),
-        ) {
+        let path = CString::new(path.as_os_str().as_bytes())?;
+        match libc::fanotify_mark(fanotify_fd, flags, mask, dirfd, path.as_ptr()) {
             0 => Ok(()),
             _ => Err(Error::last_os_error()),
         }
