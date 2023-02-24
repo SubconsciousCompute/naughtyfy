@@ -1,5 +1,5 @@
-pub mod flags;
 pub mod errors;
+pub mod flags;
 pub mod low_api;
 pub mod structs;
 

@@ -129,12 +129,6 @@
 <a href="#129" id="129">129</a>
 <a href="#130" id="130">130</a>
 <a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
 </pre><pre class="rust"><code><span class="kw">use </span>lazy_static::lazy_static;
 
 <span class="kw">use </span><span class="kw">crate</span>::structs::<span class="kw-2">*</span>;
@@ -187,12 +181,6 @@
 /// * O_CLOEXEC (since Linux 3.18)
 ///
 /// The following are also allowable: `O_APPEND`, `O_DSYNC`, `O_NOATIME`,`O_NONBLOCK`, and `O_SYNC`.  Specifying any other flag in `event_f_flags` yields the error `EINVAL`.
-/// # Examples
-/// ```
-/// use naughtyfy::low_layer::*;
-/// let fd = fanotify_init(FAN_CLASS_NOTIF, O_RDONLY).unwrap();
-/// assert!(fd &gt; 0)
-/// ```
 </span><span class="kw">pub fn </span>fanotify_init(flags: u32, event_f_flags: u32) -&gt; <span class="prelude-ty">Result</span>&lt;i32, Error&gt; {
     <span class="kw">unsafe </span>{
         <span class="kw">match </span>libc::fanotify_init(flags, event_f_flags) {
