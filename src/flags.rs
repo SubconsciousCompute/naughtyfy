@@ -1,4 +1,4 @@
-//! 1-1 mapping of all flags that [fanotify.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/fanotify.h) has
+//! 1-1 mapping of all flags that [fanotify.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/fanotify.h) has <br>
 
 extern crate libc;
 // For documentaton linking
@@ -189,6 +189,39 @@ pub const FAN_AUDIT: u32 = 0x10;
 /// Indicates a queue overflow.
 pub const FAN_NOFD: i32 = -1;
 
+/// This value allows only read access.
+pub const O_RDONLY: u32 = 00000000;
+
+/// This value allows only write access.
+pub const O_WRONLY: u32 = 1;
+
+/// This value allows read and write access.
+pub const O_RDWR: u32 = 2;
+
+// The file is opened in append mode.
+pub const O_APPEND: u32 = 2000;
+
+/// When possible, the file is opened in nonblocking mode.
+pub const O_NONBLOCK: u32 = 4000;
+
+/// Write operations on the file will complete according to
+/// the requirements of synchronized I/O data integrity
+/// completion.
+pub const O_DSYNC: u32 = 10000; /* direct disk access hint */
+
+/// Enable support for files exceeding 2 GB.  Failing to set
+/// this flag will result in an EOVERFLOW error when trying to
+/// open a large file which is monitored by an fanotify group
+/// on a 32-bit system.
+pub const O_LARGEFILE: u32 = 100000;
+
+/// Do not update the file last access time (st_atime in the
+/// inode) when the file is [read(2)](https://man7.org/linux/man-pages/man2/read.2.html).
+pub const O_NOATIME: u32 = 1000000;
+
+/// Enable the close-on-exec flag for the new file descriptor.
+pub const O_CLOEXEC: u32 = 2000000; /* set close_on_exec */
+
 /* Flags to determine fanotify event format */
 pub const FAN_REPORT_PIDFD: u32 = 0x00000080; /* Report pidfd for event->pid */
 pub const FAN_REPORT_TID: u32 = 0x00000100; /* event->pid is thread id */
@@ -229,6 +262,7 @@ pub const FAN_MARK_REMOVE: u32 = 0x00000002;
 /// link.)
 pub const FAN_MARK_DONT_FOLLOW: u32 = 0x00000004;
 
+/// Marks a directory filesystem object for events.
 /// If the filesystem object to be marked is not a directory,
 /// the error [`ENOTDIR`] shall be raised.
 pub const FAN_MARK_ONLYDIR: u32 = 0x00000008;

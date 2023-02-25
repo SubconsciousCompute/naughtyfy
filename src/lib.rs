@@ -1,7 +1,7 @@
+pub mod api;
 pub mod errors;
 pub mod flags;
-pub mod low_api;
-pub mod structs;
+pub mod types;
 
 #[cfg(test)]
 mod tests {
