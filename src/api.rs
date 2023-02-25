@@ -213,11 +213,11 @@ impl Path for String {
 /// ```rust
 /// # #[should_panic]
 /// # fn ex() {
-///     # use naughtyfy::flags::*;
-///     # use naughtyfy::types::*;
-///     # use naughtyfy::api::*;
-///     let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
-///     fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::types::*;
+/// # use naughtyfy::api::*;
+/// let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
+/// fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
 /// # }
 /// ```
 pub fn fanotify_mark<P: ?Sized + Path>(
@@ -238,10 +238,29 @@ pub fn fanotify_mark<P: ?Sized + Path>(
 
 /// This function ateempts to read from a file descriptor `fanotify_fd`
 /// into a `Vec<fanotify_event_metadata>` and return a Result.
+///
+/// # Argument
+/// * `fd` - file descriptor returned by [`fanotify_init()`]  
+///
+/// # Example
+/// ```rust
+/// # #[should_panic]
+/// # fn ex() {
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::types::*;
+/// # use naughtyfy::api::*;
+/// let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
+/// fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
+/// let fan_events = fanotify_read(fd);
+/// println!("{fan_events:#?}");
+/// # }
+/// ```
 pub fn fanotify_read(fanotify_fd: i32) -> Result<Vec<fanotify_event_metadata>, Error> {
     let mut vec = Vec::new();
     unsafe {
         let buffer = libc::malloc(FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN);
+
+        // allocation may fail due to limited memory.
         if buffer == libc::PT_NULL as *mut c_void {
             return Err(Error::last_os_error());
         }
@@ -261,8 +280,31 @@ pub fn fanotify_read(fanotify_fd: i32) -> Result<Vec<fanotify_event_metadata>, E
     }
     Ok(vec)
 }
-pub fn close_fd(fd: i32) {
+
+/// Closes the file descriptor returned by [`fanotify_init()`]
+///
+/// # Argument
+/// * `fd` - `fd` - file descriptor returned by [`fanotify_init()`]
+///
+/// # Example
+/// ```rust
+/// # #[should_panic]
+/// # fn ex() {
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::types::*;
+/// # use naughtyfy::api::*;
+/// let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
+/// fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
+/// let fan_events = fanotify_read(fd);
+/// println!("{fan_events:#?}");
+///
+/// # }
+/// ```
+pub fn fanotify_close(fd: i32) -> Result<(), Error> {
     unsafe {
-        libc::close(fd);
+        match libc::close(fd) {
+            0 => Ok(()),
+            _ => Err(Error::last_os_error()),
+        }
     }
 }
