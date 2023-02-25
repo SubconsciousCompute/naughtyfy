@@ -1,4 +1,3 @@
-
 /// Error codes associated to fanotify, fanotify_init(), fanotify_mark() and read()
 /// EINVAL An invalid value was passed in flags or event_f_flags.
 ///        FAN_ALL_INIT_FLAGS (deprecated since Linux kernel version
@@ -94,6 +93,6 @@ impl fmt::Display for FanotifyInitError {
             _ => "Unknown error occured."
         };
 
-        write!(f, "{}", err_msg)
+        write!(f, "{err_msg}")
     }
 }
