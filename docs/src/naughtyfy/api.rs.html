@@ -266,6 +266,48 @@
 <a href="#266" id="266">266</a>
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Low level function mapping for fanotify
 //!
 
@@ -481,11 +523,11 @@
 /// ```rust
 /// # #[should_panic]
 /// # fn ex() {
-///     # use naughtyfy::flags::*;
-///     # use naughtyfy::types::*;
-///     # use naughtyfy::api::*;
-///     let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
-///     fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, &quot;./&quot;);
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::types::*;
+/// # use naughtyfy::api::*;
+/// let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
+/// fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, &quot;./&quot;);
 /// # }
 /// ```
 </span><span class="kw">pub fn </span>fanotify_mark&lt;P: <span class="question-mark">?</span>Sized + Path&gt;(
@@ -506,11 +548,30 @@
 
 <span class="doccomment">/// This function ateempts to read from a file descriptor `fanotify_fd`
 /// into a `Vec&lt;fanotify_event_metadata&gt;` and return a Result.
+///
+/// # Argument
+/// * `fd` - file descriptor returned by [`fanotify_init()`]  
+///
+/// # Example
+/// ```rust
+/// # #[should_panic]
+/// # fn ex() {
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::types::*;
+/// # use naughtyfy::api::*;
+/// let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
+/// fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, &quot;./&quot;);
+/// let fan_events = fanotify_read(fd);
+/// println!(&quot;{fan_events:#?}&quot;);
+/// # }
+/// ```
 </span><span class="kw">pub fn </span>fanotify_read(fanotify_fd: i32) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;fanotify_event_metadata&gt;, Error&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>vec = Vec::new();
     <span class="kw">unsafe </span>{
         <span class="kw">let </span>buffer = libc::malloc(FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN);
-        <span class="kw">if </span>buffer == libc::PT_NULL <span class="kw">as </span><span class="kw-2">*mut </span>c_void {
+
+        <span class="comment">// allocation may fail due to limited memory.
+        </span><span class="kw">if </span>buffer == libc::PT_NULL <span class="kw">as </span><span class="kw-2">*mut </span>c_void {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::last_os_error());
         }
         <span class="kw">let </span>sizeof = libc::read(
@@ -529,9 +590,32 @@
     }
     <span class="prelude-val">Ok</span>(vec)
 }
-<span class="kw">pub fn </span>close_fd(fd: i32) {
+
+<span class="doccomment">/// Closes the file descriptor returned by [`fanotify_init()`]
+///
+/// # Argument
+/// * `fd` - `fd` - file descriptor returned by [`fanotify_init()`]
+///
+/// # Example
+/// ```rust
+/// # #[should_panic]
+/// # fn ex() {
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::types::*;
+/// # use naughtyfy::api::*;
+/// let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
+/// fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, &quot;./&quot;);
+/// let fan_events = fanotify_read(fd);
+/// println!(&quot;{fan_events:#?}&quot;);
+///
+/// # }
+/// ```
+</span><span class="kw">pub fn </span>fanotify_close(fd: i32) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
     <span class="kw">unsafe </span>{
-        libc::close(fd);
+        <span class="kw">match </span>libc::close(fd) {
+            <span class="number">0 </span>=&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::last_os_error()),
+        }
     }
 }
 </code></pre></div>
