@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["api","Low level function mapping for fanotify"],["errors",""],["flags","1-1 mapping of all flags that fanotify.h has"],["types","Contains all the necessary structs  needed for fanotify to work"]]};
+window.SIDEBAR_ITEMS = {"mod":[["api","Low level function mapping for fanotify"],["errors",""],["flags","1-1 mapping of all flags that fanotify.h has "],["types","Contains all the necessary structs needed for fanotify to work"]]};

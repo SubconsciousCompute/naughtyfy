@@ -1,13 +1,16 @@
 //! Low level function mapping for fanotify
 //!
-use libc::c_void;
 
 use crate::types::*;
+use libc::c_void;
 use std::ffi::{CString, OsStr};
 use std::io::Error;
 use std::mem;
 use std::os::unix::ffi::OsStrExt;
 use std::slice;
+
+#[allow(unused_imports)]
+use crate::flags::*;
 
 /// Get current platform sizeof of fanotify_event_metadata.
 const FAN_EVENT_METADATA_LEN: usize = mem::size_of::<fanotify_event_metadata>();
@@ -45,6 +48,50 @@ pub static mut FAN_EVENT_BUFFER_LEN: usize = 250;
 /// If multiple listeners for permission events exist, the
 /// notification class is used to establish the sequence in which the
 /// listeners receive the events.
+///
+/// # Arguments
+/// * `flags` - Sets the notification group, can be mask of <br>
+///     * [`FAN_CLASS_PRE_CONTENT`]
+///     * [`FAN_CLASS_CONTENT`]
+///     * [`FAN_CLASS_NOTIF`]
+///
+///     The following bits can additionally be set in `flags`: <br>
+///     * [`FAN_CLOEXEC`]
+///     * [`FAN_NONBLOCK`]
+///     * [`FAN_UNLIMITED_QUEUE`]
+///     * [`FAN_UNLIMITED_MARKS`]
+///     * [`FAN_ENABLE_AUDIT`]
+///     * [`FAN_REPORT_FID`]
+///     * [`FAN_REPORT_DIR_FID`]
+///     * [`FAN_REPORT_NAME`]
+///     * [`FAN_REPORT_DFID_NAME`]
+/// * `event_f_flags` - Defines the file status flags that
+///                     will be set on the open file descriptions that are created for
+///                     fanotify events.  For details of these flags, see the description
+///                     of the flags values in open(2).  `event_f_flags` includes a multi-
+///                     bit field for the access mode. This field can take the following
+///                     values:
+///     * [`O_RDONLY`]
+///     * [`O_WRONLY`]
+///     * [`O_RDWR`]
+///
+///     Additional bits can be set in `event_f_flags`.
+///     * [`O_LARGEFILE`]
+///     * [`O_CLOEXEC`]
+///     * [`O_APPEND`]
+///     * [`O_DSYNC`]
+///     * [`O_NOATIME`]
+///     * [`O_NONBLOCK`]
+///
+/// # Example
+/// This example will panic due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// ```rust
+/// # #[should_panic]
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::api::*;
+/// let fd = fanotify_init(FAN_CLASS_NOTIF | FAN_NONBLOCK, O_RDONLY);
+/// ```
+///
 pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, Error> {
     unsafe {
         match libc::fanotify_init(flags, event_f_flags) {
@@ -101,8 +148,42 @@ impl Path for String {
 ///
 /// # Arguments
 /// * `fanotify_fd` - File descriptor returned by [`fanotify_init()`].
-/// * `flags` - Bit mask describing the modification to perform.
-/// * `mask` - Which events shall be listened for (or which shall be ignored).
+/// * `flags` - Bit mask describing the modification to perform. <br>
+///     It must include **exactly one** of the following values:
+///     * [`FAN_MARK_ADD`]
+///     * [`FAN_MARK_REMOVE`]
+///     * [`FAN_MARK_FLUSH`]
+///
+///      In addition, zero or more of the following values may be ORed
+///      into flags:
+///     * [`FAN_MARK_DONT_FOLLOW`]
+///     * [`FAN_MARK_ONLYDIR`]
+///     * [`FAN_MARK_MOUNT`]
+///     * [`FAN_MARK_FILESYSTEM`]
+///     * [`FAN_MARK_IGNORED_MASK`]
+///     * [`FAN_MARK_IGNORED_SURV_MODIFY`]
+/// * `mask` - Which events shall be listened for (or which shall be ignored). <br>
+///     It is a bit mask composed of the following values:
+///     * [`FAN_ACCESS`]
+///     * [`FAN_MODIFY`]
+///     * [`FAN_CLOSE_WRITE`]
+///     * [`FAN_CLOSE_NOWRITE`]
+///     * [`FAN_OPEN`]
+///     * [`FAN_OPEN_EXEC`]
+///     * [`FAN_ATTRIB`]
+///     * [`FAN_CREATE`]
+///     * [`FAN_DELETE`]
+///     * [`FAN_DELETE_SELF`]
+///     * [`FAN_MOVED_FROM`]
+///     * [`FAN_MOVED_TO`]
+///     * [`FAN_MOVE_SELF`]
+///     * [`FAN_OPEN_PERM`]
+///     * [`FAN_OPEN_EXEC_PERM`]
+///     * [`FAN_ACCESS_PERM`]
+///     * [`FAN_ONDIR`]
+///     * [`FAN_EVENT_ON_CHILD`]
+///     * [`FAN_CLOSE`]
+///     * [`FAN_MOVE`]
 /// * `dirfd` - Defines the filesystem object to be marked.
 /// * `path` - Filesystem path of file or diretory.
 ///
@@ -128,7 +209,7 @@ impl Path for String {
 ///   directory.
 ///
 /// # Example
-/// This example will panic because of [capabilities](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// This example will panic due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
 /// ```rust
 /// # #[should_panic]
 /// # fn ex() {
