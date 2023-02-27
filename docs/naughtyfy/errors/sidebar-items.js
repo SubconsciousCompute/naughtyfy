@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Close",""],["FanotifyError",""],["Init",""],["Mark",""],["Read",""],["Write",""]]};
+window.SIDEBAR_ITEMS = {"struct":[["Close","Marks the [`FanotifyError`] for [`fanotify_close()`]"],["FanotifyError","Error type for all fanotify errors that can occure at runtime.  This can of 5 types "],["Init","Marks the [`FanotifyError`] for [`fanotify_init()`]"],["Mark","Marks the [`FanotifyError`] for [`fanotify_mark()`]"],["Read","Marks the [`FanotifyError`] for [`fanotify_read()`]"],["Write","Marks the [`FanotifyError`] for [`fanotify_write()`]"]]};
