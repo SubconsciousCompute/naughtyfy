@@ -4,9 +4,9 @@ description = "Modern fanotify wrapper."
 keywords = ["fanotify","linux", "files","filesystem","monitor"]
 readme = "README.md"
 license = "AGPL-3.0-only"
-repository = "https://github.com/tanveerraza789/naughtyfy.git"
+repository = "https://github.com/SubconsciousCompute/naughtyfy.git"
 authors = ["Tanveer Raza <tanveerraza789@gmail.com>"]
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
