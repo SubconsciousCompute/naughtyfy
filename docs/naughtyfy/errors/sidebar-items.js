@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["FanotifyInitError",""]]};
+window.SIDEBAR_ITEMS = {"struct":[["Close",""],["FanotifyError",""],["Init",""],["Mark",""],["Read",""],["Write",""]]};

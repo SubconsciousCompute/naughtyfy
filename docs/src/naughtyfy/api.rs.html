@@ -308,11 +308,58 @@
 <a href="#308" id="308">308</a>
 <a href="#309" id="309">309</a>
 <a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Low level function mapping for fanotify
 //!
 
-</span><span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
-<span class="kw">use </span>libc::c_void;
+</span><span class="kw">use </span><span class="kw">crate</span>::errors::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::types::<span class="kw-2">*</span>;
 <span class="kw">use </span>std::ffi::{CString, OsStr};
 <span class="kw">use </span>std::io::Error;
 <span class="kw">use </span>std::mem;
@@ -324,6 +371,7 @@
 
 <span class="doccomment">/// Get current platform sizeof of fanotify_event_metadata.
 </span><span class="kw">const </span>FAN_EVENT_METADATA_LEN: usize = mem::size_of::&lt;fanotify_event_metadata&gt;();
+<span class="kw">const </span>FAN_WRITE_RESP_LEN: usize = mem::size_of::&lt;fanotify_response&gt;();
 
 <span class="doccomment">/// Length of memory to be allocated for read buffer
 </span><span class="kw">pub static </span><span class="kw-2">mut </span>FAN_EVENT_BUFFER_LEN: usize = <span class="number">250</span>;
@@ -402,10 +450,10 @@
 /// let fd = fanotify_init(FAN_CLASS_NOTIF | FAN_NONBLOCK, O_RDONLY);
 /// ```
 ///
-</span><span class="kw">pub fn </span>fanotify_init(flags: u32, event_f_flags: u32) -&gt; <span class="prelude-ty">Result</span>&lt;i32, Error&gt; {
+</span><span class="kw">pub fn </span>fanotify_init(flags: u32, event_f_flags: u32) -&gt; <span class="prelude-ty">Result</span>&lt;i32, FanotifyError&lt;Init&gt;&gt; {
     <span class="kw">unsafe </span>{
         <span class="kw">match </span>libc::fanotify_init(flags, event_f_flags) {
-            -<span class="number">1 </span>=&gt; <span class="prelude-val">Err</span>(Error::last_os_error()),
+            -<span class="number">1 </span>=&gt; <span class="prelude-val">Err</span>(Error::last_os_error().into()),
             fd =&gt; <span class="prelude-val">Ok</span>(fd),
         }
     }
@@ -536,12 +584,12 @@
     mask: u64,
     dirfd: i32,
     path: <span class="kw-2">&amp;</span>P,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), FanotifyError&lt;Mark&gt;&gt; {
     <span class="kw">unsafe </span>{
-        <span class="kw">let </span>path = CString::new(path.as_os_str().as_bytes())<span class="question-mark">?</span>;
+        <span class="kw">let </span>path = CString::new(path.as_os_str().as_bytes()).unwrap();
         <span class="kw">match </span>libc::fanotify_mark(fanotify_fd, flags, mask, dirfd, path.as_ptr()) {
             <span class="number">0 </span>=&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::last_os_error()),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::last_os_error().into()),
         }
     }
 }
@@ -565,14 +613,16 @@
 /// println!(&quot;{fan_events:#?}&quot;);
 /// # }
 /// ```
-</span><span class="kw">pub fn </span>fanotify_read(fanotify_fd: i32) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;fanotify_event_metadata&gt;, Error&gt; {
+</span><span class="kw">pub fn </span>fanotify_read(
+    fanotify_fd: i32,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;fanotify_event_metadata&gt;, FanotifyError&lt;Read&gt;&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>vec = Vec::new();
     <span class="kw">unsafe </span>{
         <span class="kw">let </span>buffer = libc::malloc(FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN);
 
         <span class="comment">// allocation may fail due to limited memory.
-        </span><span class="kw">if </span>buffer == libc::PT_NULL <span class="kw">as </span><span class="kw-2">*mut </span>c_void {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::last_os_error());
+        </span><span class="kw">if </span>buffer.is_null() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::last_os_error().into());
         }
         <span class="kw">let </span>sizeof = libc::read(
             fanotify_fd,
@@ -594,7 +644,7 @@
 <span class="doccomment">/// Closes the file descriptor returned by [`fanotify_init()`]
 ///
 /// # Argument
-/// * `fd` - `fd` - file descriptor returned by [`fanotify_init()`]
+/// * `fd` - file descriptor returned by [`fanotify_init()`]
 ///
 /// # Example
 /// ```rust
@@ -610,13 +660,57 @@
 ///
 /// # }
 /// ```
-</span><span class="kw">pub fn </span>fanotify_close(fd: i32) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+</span><span class="kw">pub fn </span>fanotify_close(fd: i32) -&gt; <span class="prelude-ty">Result</span>&lt;(), FanotifyError&lt;Close&gt;&gt; {
     <span class="kw">unsafe </span>{
         <span class="kw">match </span>libc::close(fd) {
             <span class="number">0 </span>=&gt; <span class="prelude-val">Ok</span>(()),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::last_os_error()),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::last_os_error().into()),
+        }
+    }
+}
+
+<span class="doccomment">/// Writes up to count bytes from the buffer starting at buf
+/// to the file referred to by the file descriptor fd.
+///
+/// The number of bytes written may be less than count if, for
+/// example, there is insufficient space on the underlying physical
+/// medium, or the RLIMIT_FSIZE resource limit is encountered,
+/// or the call was interrupted by a signal handler
+/// after having written less than count bytes.
+///
+/// For a seekable file (i.e., one to which lseek(2) may be applied,
+/// for example, a regular file) writing takes place at the file
+/// offset, and the file offset is incremented by the number of bytes
+/// actually written.  If the file was open(2)ed with O_APPEND, the
+/// file offset is first set to the end of the file before writing.
+/// The adjustment of the file offset and the write operation are
+/// performed as an atomic step.
+///
+/// POSIX requires that a read(2) that can be proved to occur after a
+/// write() has returned will return the new data.  Note that not all
+/// filesystems are POSIX conforming.
+///
+/// According to POSIX.1, if count is greater than SSIZE_MAX, the
+/// result is implementation-defined; see NOTES for the upper limit
+/// on Linux.
+///
+/// # Argument
+/// * `fd` - This is the file descriptor from the structure [`fanotify_event_metadata`].
+/// * `response` - This field indicates whether or not the permission is to
+///                be granted.  Its value must be either FAN_ALLOW to allow
+///                the file operation or FAN_DENY to deny the file operation.
+</span><span class="kw">pub fn </span>fanotify_write(fd: i32, response: u32) -&gt; <span class="prelude-ty">Result</span>&lt;isize, FanotifyError&lt;Write&gt;&gt; {
+    <span class="kw">let </span>res = <span class="kw-2">&amp;</span>fanotify_response { fd, response };
+    <span class="kw">unsafe </span>{
+        <span class="kw">match </span>libc::write(
+            fd,
+            res <span class="kw">as </span><span class="kw-2">*const </span>fanotify_response <span class="kw">as </span><span class="kw-2">*const </span>libc::c_void,
+            FAN_WRITE_RESP_LEN,
+        ) {
+            -<span class="number">1 </span>=&gt; <span class="prelude-val">Err</span>(Error::last_os_error().into()),
+            bytes =&gt; <span class="prelude-val">Ok</span>(bytes),
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="naughtyfy" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.0 (fc594f156 2023-01-24)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="naughtyfy" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
