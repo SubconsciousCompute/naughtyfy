@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["libc","naughtyfy"];
+window.ALL_CRATES = ["naughtyfy"];

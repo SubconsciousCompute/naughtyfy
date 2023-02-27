@@ -1,8 +1,8 @@
 //! Low level function mapping for fanotify
 //!
 
+use crate::errors::*;
 use crate::types::*;
-use libc::c_void;
 use std::ffi::{CString, OsStr};
 use std::io::Error;
 use std::mem;
@@ -14,6 +14,7 @@ use crate::flags::*;
 
 /// Get current platform sizeof of fanotify_event_metadata.
 const FAN_EVENT_METADATA_LEN: usize = mem::size_of::<fanotify_event_metadata>();
+const FAN_WRITE_RESP_LEN: usize = mem::size_of::<fanotify_response>();
 
 /// Length of memory to be allocated for read buffer
 pub static mut FAN_EVENT_BUFFER_LEN: usize = 250;
@@ -92,10 +93,10 @@ pub static mut FAN_EVENT_BUFFER_LEN: usize = 250;
 /// let fd = fanotify_init(FAN_CLASS_NOTIF | FAN_NONBLOCK, O_RDONLY);
 /// ```
 ///
-pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, Error> {
+pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, FanotifyError<Init>> {
     unsafe {
         match libc::fanotify_init(flags, event_f_flags) {
-            -1 => Err(Error::last_os_error()),
+            -1 => Err(Error::last_os_error().into()),
             fd => Ok(fd),
         }
     }
@@ -226,12 +227,12 @@ pub fn fanotify_mark<P: ?Sized + Path>(
     mask: u64,
     dirfd: i32,
     path: &P,
-) -> Result<(), Error> {
+) -> Result<(), FanotifyError<Mark>> {
     unsafe {
-        let path = CString::new(path.as_os_str().as_bytes())?;
+        let path = CString::new(path.as_os_str().as_bytes()).unwrap();
         match libc::fanotify_mark(fanotify_fd, flags, mask, dirfd, path.as_ptr()) {
             0 => Ok(()),
-            _ => Err(Error::last_os_error()),
+            _ => Err(Error::last_os_error().into()),
         }
     }
 }
@@ -255,14 +256,16 @@ pub fn fanotify_mark<P: ?Sized + Path>(
 /// println!("{fan_events:#?}");
 /// # }
 /// ```
-pub fn fanotify_read(fanotify_fd: i32) -> Result<Vec<fanotify_event_metadata>, Error> {
+pub fn fanotify_read(
+    fanotify_fd: i32,
+) -> Result<Vec<fanotify_event_metadata>, FanotifyError<Read>> {
     let mut vec = Vec::new();
     unsafe {
         let buffer = libc::malloc(FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN);
 
         // allocation may fail due to limited memory.
-        if buffer == libc::PT_NULL as *mut c_void {
-            return Err(Error::last_os_error());
+        if buffer.is_null() {
+            return Err(Error::last_os_error().into());
         }
         let sizeof = libc::read(
             fanotify_fd,
@@ -284,7 +287,7 @@ pub fn fanotify_read(fanotify_fd: i32) -> Result<Vec<fanotify_event_metadata>, E
 /// Closes the file descriptor returned by [`fanotify_init()`]
 ///
 /// # Argument
-/// * `fd` - `fd` - file descriptor returned by [`fanotify_init()`]
+/// * `fd` - file descriptor returned by [`fanotify_init()`]
 ///
 /// # Example
 /// ```rust
@@ -300,11 +303,55 @@ pub fn fanotify_read(fanotify_fd: i32) -> Result<Vec<fanotify_event_metadata>, E
 ///
 /// # }
 /// ```
-pub fn fanotify_close(fd: i32) -> Result<(), Error> {
+pub fn fanotify_close(fd: i32) -> Result<(), FanotifyError<Close>> {
     unsafe {
         match libc::close(fd) {
             0 => Ok(()),
-            _ => Err(Error::last_os_error()),
+            _ => Err(Error::last_os_error().into()),
+        }
+    }
+}
+
+/// Writes up to count bytes from the buffer starting at buf
+/// to the file referred to by the file descriptor fd.
+///
+/// The number of bytes written may be less than count if, for
+/// example, there is insufficient space on the underlying physical
+/// medium, or the RLIMIT_FSIZE resource limit is encountered,
+/// or the call was interrupted by a signal handler
+/// after having written less than count bytes.
+///
+/// For a seekable file (i.e., one to which lseek(2) may be applied,
+/// for example, a regular file) writing takes place at the file
+/// offset, and the file offset is incremented by the number of bytes
+/// actually written.  If the file was open(2)ed with O_APPEND, the
+/// file offset is first set to the end of the file before writing.
+/// The adjustment of the file offset and the write operation are
+/// performed as an atomic step.
+///
+/// POSIX requires that a read(2) that can be proved to occur after a
+/// write() has returned will return the new data.  Note that not all
+/// filesystems are POSIX conforming.
+///
+/// According to POSIX.1, if count is greater than SSIZE_MAX, the
+/// result is implementation-defined; see NOTES for the upper limit
+/// on Linux.
+///
+/// # Argument
+/// * `fd` - This is the file descriptor from the structure [`fanotify_event_metadata`].
+/// * `response` - This field indicates whether or not the permission is to
+///                be granted.  Its value must be either FAN_ALLOW to allow
+///                the file operation or FAN_DENY to deny the file operation.
+pub fn fanotify_write(fd: i32, response: u32) -> Result<isize, FanotifyError<Write>> {
+    let res = &fanotify_response { fd, response };
+    unsafe {
+        match libc::write(
+            fd,
+            res as *const fanotify_response as *const libc::c_void,
+            FAN_WRITE_RESP_LEN,
+        ) {
+            -1 => Err(Error::last_os_error().into()),
+            bytes => Ok(bytes),
         }
     }
 }
