@@ -213,7 +213,7 @@ pub const O_DSYNC: u32 = 10000; /* direct disk access hint */
 /// this flag will result in an EOVERFLOW error when trying to
 /// open a large file which is monitored by an fanotify group
 /// on a 32-bit system.
-pub const O_LARGEFILE: u32 = 100000;
+pub const O_LARGEFILE: u32 = 0x40000;
 
 /// Do not update the file last access time (st_atime in the
 /// inode) when the file is [read(2)](https://man7.org/linux/man-pages/man2/read.2.html).
