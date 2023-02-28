@@ -41,8 +41,7 @@ fn main() {
 ```
 
 # Docs
-- [Docs.rs](https://docs.rs/naughtyfy/latest/naughtyfy/) (takes time to update)
-- [Github pages](https://github.com/SubconsciousCompute/naughtyfy)
+- [Docs.rs](https://docs.rs/naughtyfy/latest/naughtyfy/)
 
 # Build 
 Build example using 
