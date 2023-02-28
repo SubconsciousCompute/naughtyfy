@@ -595,7 +595,7 @@
 /// * [`FanotifyError&lt;Write&gt;`]
 /// * [`FanotifyError&lt;Close&gt;`]
 </span><span class="kw">pub struct </span>FanotifyError&lt;Type = Init&gt; {
-    code: i32,
+    <span class="kw">pub </span>code: i32,
     oserr: String,
     desc: String,
     ty: std::marker::PhantomData&lt;Type&gt;,

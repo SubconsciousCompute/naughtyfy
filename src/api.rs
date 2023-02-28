@@ -3,7 +3,7 @@
 
 use crate::errors::*;
 use crate::types::*;
-use std::ffi::{CString, OsStr};
+use std::ffi::CString;
 use std::io::Error;
 use std::mem;
 use std::os::unix::ffi::OsStrExt;
@@ -14,7 +14,7 @@ use crate::flags::*;
 
 /// Get current platform sizeof of fanotify_event_metadata.
 const FAN_EVENT_METADATA_LEN: usize = mem::size_of::<fanotify_event_metadata>();
-const FAN_WRITE_RESP_LEN: usize = mem::size_of::<fanotify_response>();
+const FAN_WRITE_RESPONSE_LEN: usize = mem::size_of::<fanotify_response>();
 
 /// Length of memory to be allocated for read buffer
 pub static mut FAN_EVENT_BUFFER_LEN: usize = 250;
@@ -87,10 +87,17 @@ pub static mut FAN_EVENT_BUFFER_LEN: usize = 250;
 /// # Example
 /// This example will panic due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
 /// ```rust
-/// # #[should_panic]
 /// # use naughtyfy::flags::*;
 /// # use naughtyfy::api::*;
 /// let fd = fanotify_init(FAN_CLASS_NOTIF | FAN_NONBLOCK, O_RDONLY);
+/// match fd {
+///     Ok(fd) => {
+///         assert!(fd >= 0);
+///     }
+///     Err(e) => {
+///         assert_eq!(e.code, libc::EPERM);
+///     }
+/// }
 /// ```
 ///
 pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, FanotifyError<Init>> {
@@ -99,47 +106,6 @@ pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, FanotifyErro
             -1 => Err(Error::last_os_error().into()),
             fd => Ok(fd),
         }
-    }
-}
-
-/// Converts the implemented types to [`OsStr`] using `as_os_str()` method. <br>
-/// This is *NOT* [`std::path::Path`]
-///
-/// # Example
-/// ```
-/// # use std::ffi::OsStr;
-/// # pub trait Path {
-/// # fn as_os_str(&self) -> &OsStr;
-/// # }
-/// #
-/// # impl Path for str {
-/// #     fn as_os_str(&self) -> &OsStr {
-/// #         OsStr::new(self)
-/// #     }
-/// # }
-/// let path = std::path::Path::new("/usr/bin");
-/// let ostr = path.as_os_str();
-/// assert_eq!(ostr,"/usr/bin");
-/// ```
-pub trait Path {
-    fn as_os_str(&self) -> &OsStr;
-}
-
-impl Path for std::path::Path {
-    fn as_os_str(&self) -> &OsStr {
-        self.as_os_str()
-    }
-}
-
-impl Path for str {
-    fn as_os_str(&self) -> &OsStr {
-        OsStr::new(self)
-    }
-}
-
-impl Path for String {
-    fn as_os_str(&self) -> &OsStr {
-        OsStr::new(self.as_str())
     }
 }
 
@@ -348,7 +314,7 @@ pub fn fanotify_write(fd: i32, response: u32) -> Result<isize, FanotifyError<Wri
         match libc::write(
             fd,
             res as *const fanotify_response as *const libc::c_void,
-            FAN_WRITE_RESP_LEN,
+            FAN_WRITE_RESPONSE_LEN,
         ) {
             -1 => Err(Error::last_os_error().into()),
             bytes => Ok(bytes),

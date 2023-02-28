@@ -244,7 +244,7 @@ fn code_desc<T>(code: i32) -> String {
 /// * [`FanotifyError<Write>`]
 /// * [`FanotifyError<Close>`]
 pub struct FanotifyError<Type = Init> {
-    code: i32,
+    pub code: i32,
     oserr: String,
     desc: String,
     ty: std::marker::PhantomData<Type>,

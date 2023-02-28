@@ -13,12 +13,15 @@
 //! naughtyfy = "*"
 //! ```
 //! # Example
-//! ```rust 
+//! ```rust
 //! # use naughtyfy::api::*;
 //! # use naughtyfy::flags::*;
 //! # use naughtyfy::errors::*;
 //! # use naughtyfy::types::*;
-//! let fd = fanotify_init(FAN_CLOEXEC | FAN_NONBLOCK | mode.to_fan_class(),O_CLOEXEC | O_RDONLY,);
+//! # #[should_panic]
+//! # fn test () {
+//! let fd = fanotify_init(FAN_CLOEXEC | FAN_NONBLOCK | FAN_CLASS_NOTIF ,O_CLOEXEC | O_RDONLY);
+//! # }
 //! ```
 
 pub mod api;
