@@ -1,3 +1,37 @@
+//! Linux file system monitoring library that uses
+//! [fanotify](https://man7.org/linux/man-pages/man7/fanotify.7.html)
+//! underneath.
+//!
+//! # Installation
+//! Run the command in project root directory
+//! ```bash
+//! cargo add naughtyfy
+//! ```
+//! Or manually add it to `Cargo.toml`
+//! ```toml
+//! [dependencies]
+//! naughtyfy = "*"
+//! ```
+//! # Example
+//! ```rust
+//! use naughtyfy::api::*;
+//! use naughtyfy::flags::*;
+//! use naughtyfy::errors::*;
+//! use naughtyfy::types::*;
+//! let fd = fanotify_init(FAN_CLOEXEC | FAN_NONBLOCK | FAN_CLASS_NOTIF ,O_CLOEXEC | O_RDONLY);
+//! match fd {
+//!     Ok(fd) => {
+//!         assert!(fd >= 0);
+//!         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
+//!         assert!(m.is_ok());
+//!     }
+//!     Err(e) => {
+//!         // This can fail for multiple reason, most common being privileges.
+//!         assert!(e.code > 0);
+//!     }
+//! }
+//! ```
+
 pub mod api;
 pub mod errors;
 pub mod flags;

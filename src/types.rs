@@ -2,6 +2,7 @@
 //! needed for fanotify to work
 
 use libc::{__s32, __u16, __u32, __u64, __u8, c_int};
+use std::ffi::OsStr;
 
 // For documentaton linking
 #[allow(unused_imports)]
@@ -145,4 +146,45 @@ pub struct fanotify_response {
     /// be granted.  Its value must be either [`crate::flags::FAN_ALLOW`] to allow
     /// the file operation or [`crate::flags::FAN_DENY`] to deny the file operation.
     pub response: __u32,
+}
+
+/// Converts the implemented types to [`OsStr`] using `as_os_str()` method. <br>
+/// This is *NOT* [`std::path::Path`]
+///
+/// # Example
+/// ```
+/// # use std::ffi::OsStr;
+/// # pub trait Path {
+/// # fn as_os_str(&self) -> &OsStr;
+/// # }
+/// #
+/// # impl Path for str {
+/// #     fn as_os_str(&self) -> &OsStr {
+/// #         OsStr::new(self)
+/// #     }
+/// # }
+/// let path = std::path::Path::new("/usr/bin");
+/// let ostr = path.as_os_str();
+/// assert_eq!(ostr,"/usr/bin");
+/// ```
+pub trait Path {
+    fn as_os_str(&self) -> &OsStr;
+}
+
+impl Path for std::path::Path {
+    fn as_os_str(&self) -> &OsStr {
+        self.as_os_str()
+    }
+}
+
+impl Path for str {
+    fn as_os_str(&self) -> &OsStr {
+        OsStr::new(self)
+    }
+}
+
+impl Path for String {
+    fn as_os_str(&self) -> &OsStr {
+        OsStr::new(self.as_str())
+    }
 }
