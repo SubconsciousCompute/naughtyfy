@@ -1,7 +1,7 @@
 [package]
 name = "naughtyfy"
 description = "Modern fanotify wrapper."
-keywords = ["fanotify", "linux", "files", "filesystem", "monitor", "notify"]
+keywords = ["fanotify", "linux", "files", "filesystem", "monitor"]
 readme = "README.md"
 license = "AGPL-3.0-only"
 repository = "https://github.com/SubconsciousCompute/naughtyfy.git"
