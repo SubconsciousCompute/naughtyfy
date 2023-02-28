@@ -573,7 +573,7 @@
 /// this flag will result in an EOVERFLOW error when trying to
 /// open a large file which is monitored by an fanotify group
 /// on a 32-bit system.
-</span><span class="kw">pub const </span>O_LARGEFILE: u32 = <span class="number">100000</span>;
+</span><span class="kw">pub const </span>O_LARGEFILE: u32 = <span class="number">0x40000</span>;
 
 <span class="doccomment">/// Do not update the file last access time (st_atime in the
 /// inode) when the file is [read(2)](https://man7.org/linux/man-pages/man2/read.2.html).

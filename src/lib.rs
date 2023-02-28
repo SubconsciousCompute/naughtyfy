@@ -14,14 +14,22 @@
 //! ```
 //! # Example
 //! ```rust
-//! # use naughtyfy::api::*;
-//! # use naughtyfy::flags::*;
-//! # use naughtyfy::errors::*;
-//! # use naughtyfy::types::*;
-//! # #[should_panic]
-//! # fn test () {
+//! use naughtyfy::api::*;
+//! use naughtyfy::flags::*;
+//! use naughtyfy::errors::*;
+//! use naughtyfy::types::*;
 //! let fd = fanotify_init(FAN_CLOEXEC | FAN_NONBLOCK | FAN_CLASS_NOTIF ,O_CLOEXEC | O_RDONLY);
-//! # }
+//! match fd {
+//!     Ok(fd) => {
+//!         assert!(fd >= 0);
+//!         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
+//!         assert!(m.is_ok());
+//!     }
+//!     Err(e) => {
+//!         // This can fail for multiple reason, most common being privileges.
+//!         assert!(e.code > 0);
+//!     }
+//! }
 //! ```
 
 pub mod api;
