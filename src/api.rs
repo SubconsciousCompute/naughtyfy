@@ -1,5 +1,4 @@
 //! Low level function mapping for fanotify
-//!
 
 use crate::errors::*;
 use crate::types::*;
@@ -12,8 +11,10 @@ use std::slice;
 #[allow(unused_imports)]
 use crate::flags::*;
 
-/// Get current platform sizeof of fanotify_event_metadata.
+/// Get current platform sizeof of [`fanotify_event_metadata`].
 const FAN_EVENT_METADATA_LEN: usize = mem::size_of::<fanotify_event_metadata>();
+
+/// Get current platform size of [`fanotify_response`]
 const FAN_WRITE_RESPONSE_LEN: usize = mem::size_of::<fanotify_response>();
 
 /// Length of memory to be allocated for read buffer
@@ -85,7 +86,7 @@ pub static mut FAN_EVENT_BUFFER_LEN: usize = 250;
 ///     * [`O_NONBLOCK`]
 ///
 /// # Example
-/// This example will panic due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// This example may thorw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
 /// ```rust
 /// # use naughtyfy::flags::*;
 /// # use naughtyfy::api::*;
@@ -95,7 +96,8 @@ pub static mut FAN_EVENT_BUFFER_LEN: usize = 250;
 ///         assert!(fd >= 0);
 ///     }
 ///     Err(e) => {
-///         assert_eq!(e.code, libc::EPERM);
+///         eprintln!("Cannot get fd due to {e}");
+///         assert!(e.code != 0);
 ///     }
 /// }
 /// ```
@@ -160,23 +162,23 @@ pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, FanotifyErro
 /// * If pathname is `NULL`, dirfd defines the filesystem object to be
 ///   marked.
 /// * If pathname is `NULL`, and dirfd takes the special value
-///   `AT_FDCWD`, the current working directory is to be marked.
+///   [`AT_FDCWD`], the current working directory is to be marked.
 
 /// * If pathname is absolute, it defines the filesystem object to
 ///   be marked, and dirfd is ignored.
 
 /// * If pathname is relative, and dirfd does not have the value
-///   `AT_FDCWD`, then the filesystem object to be marked is
+///   [`AT_FDCWD`], then the filesystem object to be marked is
 ///   determined by interpreting pathname relative the directory
 ///   referred to by dirfd.
 
-/// * If pathname is relative, and dirfd has the value `AT_FDCWD`,
+/// * If pathname is relative, and dirfd has the value [`AT_FDCWD`],
 ///   then the filesystem object to be marked is determined by
 ///   interpreting pathname relative to the current working
 ///   directory.
 ///
 /// # Example
-/// This example will panic due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// This example will throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
 /// ```rust
 /// # use naughtyfy::flags::*;
 /// # use naughtyfy::types::*;
@@ -184,13 +186,14 @@ pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, FanotifyErro
 /// let fd = fanotify_init(FAN_CLASS_NOTIF, 0);
 /// match fd {
 ///     Ok(fd) => {
-///         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
+///         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
 ///         assert!(m.is_ok());
 ///         assert!(fd >= 0);
 ///     }
 ///     Err(e) => {
 ///         // This can fail for multiple reason, most common being privileges.
-///         assert_eq!(e.code, libc::EPERM);
+///         eprintln!("Cannot get fd due to {e}");
+///         assert!(e.code != 0);
 ///     }
 /// }
 /// ```
@@ -210,24 +213,31 @@ pub fn fanotify_mark<P: ?Sized + Path>(
     }
 }
 
-/// This function ateempts to read from a file descriptor `fanotify_fd`
+/// This function attempts to read from a file descriptor `fanotify_fd`
 /// into a `Vec<fanotify_event_metadata>` and return a Result.
 ///
 /// # Argument
 /// * `fd` - file descriptor returned by [`fanotify_init()`]  
 ///
 /// # Example
+/// This example will throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
 /// ```rust
-/// # #[should_panic]
-/// # fn ex() {
 /// # use naughtyfy::flags::*;
 /// # use naughtyfy::types::*;
 /// # use naughtyfy::api::*;
-/// let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
-/// fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
-/// let fan_events = fanotify_read(fd);
-/// println!("{fan_events:#?}");
-/// # }
+/// let fd = fanotify_init(FAN_CLASS_NOTIF, 0);
+/// match fd {
+///     Ok(fd) => {
+///         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
+///         let res = fanotify_read(fd);
+///         assert!(res.is_ok());
+///     }
+///     Err(e) => {
+///         // This can fail for multiple reason, most common being privileges.
+///         eprintln!("Cannot get fd due to {e}");
+///         assert!(e.code != 0);
+///     }
+/// }
 /// ```
 pub fn fanotify_read(
     fanotify_fd: i32,
@@ -255,34 +265,6 @@ pub fn fanotify_read(
         libc::free(buffer);
     }
     Ok(vec)
-}
-
-/// Closes the file descriptor returned by [`fanotify_init()`]
-///
-/// # Argument
-/// * `fd` - file descriptor returned by [`fanotify_init()`]
-///
-/// # Example
-/// ```rust
-/// # #[should_panic]
-/// # fn ex() {
-/// # use naughtyfy::flags::*;
-/// # use naughtyfy::types::*;
-/// # use naughtyfy::api::*;
-/// let fd = fanotify_init(FAN_CLASS_NOTIF, 0).unwrap();
-/// fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
-/// let fan_events = fanotify_read(fd);
-/// println!("{fan_events:#?}");
-///
-/// # }
-/// ```
-pub fn fanotify_close(fd: i32) -> Result<(), FanotifyError<Close>> {
-    unsafe {
-        match libc::close(fd) {
-            0 => Ok(()),
-            _ => Err(Error::last_os_error().into()),
-        }
-    }
 }
 
 /// Writes up to count bytes from the buffer starting at buf
@@ -325,7 +307,7 @@ pub fn fanotify_close(fd: i32) -> Result<(), FanotifyError<Close>> {
 ///                         O_RDONLY | O_LARGEFILE);
 /// match fd {
 ///     Ok(fd) => {
-///         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
+///         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
 ///         assert!(m.is_ok());
 ///         assert!(fd >= 0);
 ///         
@@ -356,6 +338,46 @@ pub fn fanotify_write(fd: i32, response: u32) -> Result<isize, FanotifyError<Wri
         ) {
             -1 => Err(Error::last_os_error().into()),
             bytes => Ok(bytes),
+        }
+    }
+}
+
+/// Closes the file descriptor returned by [`fanotify_init()`]
+///
+/// # Argument
+/// * `fd` - file descriptor returned by [`fanotify_init()`]
+///
+/// # Example
+/// ```rust
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::types::*;
+/// # use naughtyfy::api::*;
+/// let fd = fanotify_init(FAN_CLOEXEC | FAN_CLASS_CONTENT | FAN_NONBLOCK,
+///                         O_RDONLY | O_LARGEFILE);
+/// match fd {
+///     Ok(fd) => {
+///         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
+///         let events = fanotify_read(fd).unwrap();
+///         if events.len() > 1 {
+///             for event in events {
+///                 let res = fanotify_write(event.fd,FAN_ALLOW);
+///             }
+///         }
+///         let status = fanotify_close(fd);
+///         assert!(status.is_ok());
+///     }
+///     Err(e) => {
+///         // This can fail for multiple reason, most common being privileges.
+///         eprintln!("Cannot get fd due to {e}");
+///         assert!(e.code != 0);
+///     }
+/// }
+/// ```
+pub fn fanotify_close(fd: i32) -> Result<(), FanotifyError<Close>> {
+    unsafe {
+        match libc::close(fd) {
+            0 => Ok(()),
+            _ => Err(Error::last_os_error().into()),
         }
     }
 }

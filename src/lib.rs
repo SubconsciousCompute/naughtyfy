@@ -14,20 +14,27 @@
 //! ```
 //! # Example
 //! ```rust
-//! use naughtyfy::api::*;
-//! use naughtyfy::flags::*;
-//! use naughtyfy::errors::*;
-//! use naughtyfy::types::*;
-//! let fd = fanotify_init(FAN_CLOEXEC | FAN_NONBLOCK | FAN_CLASS_NOTIF ,O_CLOEXEC | O_RDONLY);
+//! # use naughtyfy::flags::*;
+//! # use naughtyfy::types::*;
+//! # use naughtyfy::api::*;
+//! let fd = fanotify_init(FAN_CLOEXEC | FAN_CLASS_CONTENT | FAN_NONBLOCK,
+//!                         O_RDONLY | O_LARGEFILE);
 //! match fd {
 //!     Ok(fd) => {
-//!         assert!(fd >= 0);
-//!         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, libc::AT_FDCWD, "./");
-//!         assert!(m.is_ok());
+//!         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
+//!         let events = fanotify_read(fd).unwrap();
+//!         if events.len() > 1 {
+//!             for event in events {
+//!                 let res = fanotify_write(event.fd,FAN_ALLOW);
+//!             }
+//!         }
+//!         let status = fanotify_close(fd);
+//!         assert!(status.is_ok());
 //!     }
 //!     Err(e) => {
 //!         // This can fail for multiple reason, most common being privileges.
-//!         assert!(e.code > 0);
+//!         eprintln!("Cannot get fd due to {e}");
+//!         assert!(e.code != 0);
 //!     }
 //! }
 //! ```

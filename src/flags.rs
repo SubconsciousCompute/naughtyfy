@@ -222,6 +222,9 @@ pub const O_NOATIME: u32 = 1000000;
 /// Enable the close-on-exec flag for the new file descriptor.
 pub const O_CLOEXEC: u32 = 2000000; /* set close_on_exec */
 
+/// Special value used to indicate openat should use the current working directory
+pub const AT_FDCWD: i32 = -100;
+
 /* Flags to determine fanotify event format */
 pub const FAN_REPORT_PIDFD: u32 = 0x00000080; /* Report pidfd for event->pid */
 pub const FAN_REPORT_TID: u32 = 0x00000100; /* event->pid is thread id */
