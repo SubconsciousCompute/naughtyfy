@@ -1,15 +1,12 @@
 # 📁 Naughtyfy
 A modern fanotify wrapper.
 
-Safe bindings to fanotify are completed and can be used.
-
 Note: This is still under development.
 
 Feel free to open issues on the repo.
 # Example
 `lowkey.rs` - Example of low level api biding.
 ```rust
-use libc::AT_FDCWD;
 use naughtyfy::api::*;
 use naughtyfy::flags::*;
 
@@ -31,6 +28,7 @@ fn main() {
     loop {
         let res = fanotify_read(fd).unwrap();
         println!("{res:#?}");
+        res.iter().for_each(|e| fanotify_close(e.fd).unwrap());
         iter += 1;
         if iter > 10 {
             break;
@@ -51,6 +49,14 @@ Build example using
 Run `lowkey` using 
 
 `sudo ./target/release/examples/lowkey`
+
+# Goals 
+- Safe
+- Less overhead
+- Documented
+- Desciptive errors
+  
+Even though it's not designed to be blazzingly fast but is comparable. Will get better with further updates.
 
 # Thanks
 - [fanotify and it's manpage](https://man7.org/linux/man-pages/man7/fanotify.7.html)

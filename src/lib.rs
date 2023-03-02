@@ -23,10 +23,9 @@
 //!     Ok(fd) => {
 //!         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
 //!         let events = fanotify_read(fd).unwrap();
-//!         if events.len() > 1 {
-//!             for event in events {
-//!                 let res = fanotify_write(event.fd,FAN_ALLOW);
-//!             }
+//!         for event in events {
+//!             println!("{:#?}",event);
+//!             fanotify_close(event.fd);
 //!         }
 //!         let status = fanotify_close(fd);
 //!         assert!(status.is_ok());

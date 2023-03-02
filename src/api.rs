@@ -215,6 +215,9 @@ pub fn fanotify_mark<P: ?Sized + Path>(
 
 /// This function attempts to read from a file descriptor `fanotify_fd`
 /// into a `Vec<fanotify_event_metadata>` and return a Result.
+/// # **Important**
+/// Don't forget to close `fd` of all [`fanotify_event_metadata`] returned from this function
+/// using [`fanotify_close()`]
 ///
 /// # Argument
 /// * `fd` - file descriptor returned by [`fanotify_init()`]  
@@ -231,6 +234,9 @@ pub fn fanotify_mark<P: ?Sized + Path>(
 ///         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
 ///         let res = fanotify_read(fd);
 ///         assert!(res.is_ok());
+///         for meta in res.unwrap() {
+///             fanotify_close(meta.fd).unwrap();
+///         }
 ///     }
 ///     Err(e) => {
 ///         // This can fail for multiple reason, most common being privileges.
@@ -342,10 +348,10 @@ pub fn fanotify_write(fd: i32, response: u32) -> Result<isize, FanotifyError<Wri
     }
 }
 
-/// Closes the file descriptor returned by [`fanotify_init()`]
+/// Closes the file descriptor returned by [`fanotify_init()`] or [`fanotify_read()`]
 ///
 /// # Argument
-/// * `fd` - file descriptor returned by [`fanotify_init()`]
+/// * `fd` - file descriptor returned by [`fanotify_init()`] or [`fanotify_event_metadata`]`.fd`
 ///
 /// # Example
 /// ```rust
@@ -356,13 +362,6 @@ pub fn fanotify_write(fd: i32, response: u32) -> Result<isize, FanotifyError<Wri
 ///                         O_RDONLY | O_LARGEFILE);
 /// match fd {
 ///     Ok(fd) => {
-///         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
-///         let events = fanotify_read(fd).unwrap();
-///         if events.len() > 1 {
-///             for event in events {
-///                 let res = fanotify_write(event.fd,FAN_ALLOW);
-///             }
-///         }
 ///         let status = fanotify_close(fd);
 ///         assert!(status.is_ok());
 ///     }
