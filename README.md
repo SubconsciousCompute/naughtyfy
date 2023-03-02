@@ -7,7 +7,6 @@ Feel free to open issues on the repo.
 # Example
 `lowkey.rs` - Example of low level api biding.
 ```rust
-use libc::AT_FDCWD;
 use naughtyfy::api::*;
 use naughtyfy::flags::*;
 
