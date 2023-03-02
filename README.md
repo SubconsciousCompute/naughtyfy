@@ -1,8 +1,6 @@
 # 📁 Naughtyfy
 A modern fanotify wrapper.
 
-Safe bindings to fanotify are completed and can be used.
-
 Note: This is still under development.
 
 Feel free to open issues on the repo.
@@ -52,6 +50,14 @@ Build example using
 Run `lowkey` using 
 
 `sudo ./target/release/examples/lowkey`
+
+# Goals 
+- Safe
+- Less overhead
+- Documented
+- Desciptive errors
+  
+Even though it's not designed to be blazzingly fast but is comparable. Will get better with further updates.
 
 # Thanks
 - [fanotify and it's manpage](https://man7.org/linux/man-pages/man7/fanotify.7.html)
