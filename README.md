@@ -31,6 +31,7 @@ fn main() {
     loop {
         let res = fanotify_read(fd).unwrap();
         println!("{res:#?}");
+        res.iter().for_each(|e| fanotify_close(e.fd).unwrap());
         iter += 1;
         if iter > 10 {
             break;

@@ -24,6 +24,7 @@
 //!         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
 //!         let events = fanotify_read(fd).unwrap();
 //!         for event in events {
+//!             println!("{:#?}",event);
 //!             fanotify_close(event.fd);
 //!         }
 //!         let status = fanotify_close(fd);
