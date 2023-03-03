@@ -226,11 +226,22 @@ pub const O_CLOEXEC: u32 = 2000000; /* set close_on_exec */
 pub const AT_FDCWD: i32 = -100;
 
 /* Flags to determine fanotify event format */
+/// Report pidfd for event->pid
 pub const FAN_REPORT_PIDFD: u32 = 0x00000080; /* Report pidfd for event->pid */
+
+/// event->pid is thread id
 pub const FAN_REPORT_TID: u32 = 0x00000100; /* event->pid is thread id */
+
+/// Report unique file id
 pub const FAN_REPORT_FID: u32 = 0x00000200; /* Report unique file id */
+
+/// Report unique directory id
 pub const FAN_REPORT_DIR_FID: u32 = 0x00000400; /* Report unique directory id */
+
+/// Report events with name
 pub const FAN_REPORT_NAME: u32 = 0x00000800; /* Report events with name */
+
+/// Report dirent target id
 pub const FAN_REPORT_TARGET_FID: u32 = 0x00001000; /* Report dirent target id  */
 
 /// Convenience macro - [`FAN_REPORT_NAME`] requires [`FAN_REPORT_DIR_FID`]
@@ -244,6 +255,7 @@ pub const FAN_REPORT_DFID_NAME_TARGET: u32 =
 /* Deprecated - do not use this in programs and do not add new flags here! */
 #[deprecated(note = "do not use this in programs!")]
 #[allow(deprecated)] // only allowing it because of 1-1 mapping
+// Deprecated, Do not use.
 pub const FAN_ALL_INIT_FLAGS: u32 =
     FAN_CLOEXEC | FAN_NONBLOCK | FAN_ALL_CLASS_BITS | FAN_UNLIMITED_QUEUE | FAN_UNLIMITED_MARKS;
 
@@ -293,7 +305,26 @@ pub const FAN_MARK_IGNORED_SURV_MODIFY: u32 = 0x00000040;
 pub const FAN_MARK_FLUSH: u32 = 0x00000080;
 
 /* FAN_MARK_FILESYSTEM is	0x00000100 */
-
+/// When an inode mark is created with this flag, the inode object
+/// will not be pinned to the inode cache, therefore, allowing the
+/// inode object to be evicted from the inode cache when the memory
+/// pressure on the system is high. The eviction of the inode object
+/// results in the evictable mark also being lost. When the mask of
+/// an evictable inode mark is updated without using the 
+/// `FAN_MARK_EVICATBLE` flag, the marked inode is pinned to inode 
+/// cache and the mark is no longer evictable. When the mask of a 
+/// non-evictable inode mark is updated with the FAN_MARK_EVICTABLE 
+/// flag, the inode mark remains non-evictable and the update fails 
+/// with EEXIST error. Mounts and filesystems are not evictable objects,
+/// therefore, an attempt to create a mount mark or a filesystem mark 
+/// with the FAN_MARK_EVICTABLE flag, will result in the error EINVAL. 
+/// For example, inode marks can be used in combination with mount marks
+/// to reduce the amount of events from noninteresting paths. 
+/// The event listener reads events, checks if the path reported in the 
+/// event is of interest, and if it is not, the listener sets a mark with 
+/// an ignore mask on the directory. Evictable inode marks allow using 
+/// this method for a large number of directories without the concern 
+/// of pinning all inodes and exhausting the system's memory.
 pub const FAN_MARK_EVICTABLE: u32 = 0x00000200;
 
 /// This bit is mutually exclusive with [`FAN_MARK_IGNORED_MASK`] bit.
@@ -329,6 +360,7 @@ pub const FAN_MARK_FILESYSTEM: u32 = 0x00000100;
 pub const FAN_MARK_IGNORE_SURV: u32 = FAN_MARK_IGNORE | FAN_MARK_IGNORED_SURV_MODIFY;
 
 /* Deprecated - do not use this in programs and do not add new flags here! */
+// Deprecated, Do not use.
 #[deprecated(note = "do not use this in programs!")]
 pub const FAN_ALL_MARK_FLAGS: u32 = FAN_MARK_ADD
     | FAN_MARK_REMOVE
@@ -340,6 +372,7 @@ pub const FAN_ALL_MARK_FLAGS: u32 = FAN_MARK_ADD
     | FAN_MARK_FLUSH;
 
 /* Deprecated - do not use this in programs and do not add new flags here! */
+// Deprecated, Do not use.
 #[deprecated(note = "do not use this in programs!")]
 pub const FAN_ALL_EVENTS: u64 = FAN_ACCESS | FAN_MODIFY | FAN_CLOSE | FAN_OPEN;
 
@@ -347,10 +380,12 @@ pub const FAN_ALL_EVENTS: u64 = FAN_ACCESS | FAN_MODIFY | FAN_CLOSE | FAN_OPEN;
  * All events which require a permission response from userspace
  */
 /* Deprecated - do not use this in programs and do not add new flags here! */
+// Deprecated, Do not use.
 #[deprecated(note = "do not use this in programs!")]
 pub const FAN_ALL_PERM_EVENTS: u64 = FAN_OPEN_PERM | FAN_ACCESS_PERM;
 
 /* Deprecated - do not use this in programs and do not add new flags here! */
+// Deprecated, Do not use.
 #[deprecated(note = "do not use this in programs!")]
 #[allow(deprecated)] // only allowing it because of 1-1 mapping
 pub const FAN_ALL_OUTGOING_EVENTS: u64 = FAN_ALL_EVENTS | FAN_ALL_PERM_EVENTS | FAN_Q_OVERFLOW;
