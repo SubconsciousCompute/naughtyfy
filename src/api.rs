@@ -273,6 +273,75 @@ pub fn fanotify_read(
     Ok(vec)
 }
 
+/// This function attempts to read from a file descriptor `fanotify_fd`
+/// and performs `process_metadata` on [`fanotify_event_metadata`] recieved after read.
+/// returns `Result<(),FanotifyError>`.
+///
+/// This function closes `metadata.fd` after calling `process_metadata`
+///
+/// # Argument
+/// * `fd` - file descriptor returned by [`fanotify_init()`]  
+/// * `process_metadata` - Function / Closure for processing [`fanotify_event_metadata`].
+///
+/// # Example
+/// This example will throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// ```rust
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::types::*;
+/// # use naughtyfy::api::*;
+/// fn procedure(md: fanotify_event_metadata) {
+///     println!("{md:#?}");
+/// }
+///
+/// fn main() {
+///     let fd = fanotify_init(FAN_CLASS_NOTIF, 0);
+///      match fd {
+///          Ok(fd) => {
+///              let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
+///              let res = fanotify_read(fd);
+///              assert!(res.is_ok());
+///              fanotify_read_do(fd,procedure);
+///          }
+///          Err(e) => {
+///              // This can fail for multiple reason, most common being privileges.
+///              eprintln!("Cannot get fd due to {e}");
+///              assert!(e.code != 0);
+///          }
+///      }
+/// }
+/// ```
+pub fn fanotify_read_do(
+    fanotify_fd: i32,
+    process_metadata: fn(fanotify_event_metadata),
+) -> Result<(), FanotifyError> {
+    unsafe {
+        let buffer = libc::malloc(FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN);
+
+        // allocation may fail due to limited memory.
+        if buffer.is_null() {
+            return Err(Error::last_os_error().into());
+        }
+        let sizeof = libc::read(
+            fanotify_fd,
+            buffer,
+            FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN,
+        );
+        if sizeof != libc::EAGAIN as isize && sizeof > 0 {
+            for metadata in slice::from_raw_parts(
+                buffer as *mut fanotify_event_metadata,
+                sizeof as usize / FAN_EVENT_METADATA_LEN,
+            ) {
+                process_metadata(*metadata);
+                if let Err(e) = fanotify_close(metadata.fd) {
+                    eprintln!("{e}");
+                }
+            }
+            libc::free(buffer);
+        }
+    }
+    Ok(())
+}
+
 /// Writes up to count bytes from the buffer starting at buf
 /// to the file referred to by the file descriptor fd.
 ///
