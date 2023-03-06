@@ -6,6 +6,8 @@ use std::ffi::OsStr;
 
 // For documentaton linking
 #[allow(unused_imports)]
+use crate::api::*;
+#[allow(unused_imports)]
 use crate::flags::*;
 
 /// After a successful read(2), the read buffer contains the following structure
@@ -63,11 +65,7 @@ struct __kernel_fsid_t {
     val: [c_int; 2],
 }
 
-/// In case of an fanotify group that identifies filesystem objects
-/// by file handles, you should also expect to receive one or more
-/// additional information records of the structure detailed below
-/// following the generic [`fanotify_event_metadata`] structure within
-/// the read buffer:
+/// This is the header part of [`fanotify_event_info_fid`]
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct fanotify_event_info_header {
@@ -76,9 +74,16 @@ pub struct fanotify_event_info_header {
     pub len: __u16,
 }
 
+/// In case of an fanotify group that identifies filesystem objects
+/// by file handles (i.e. [`fanotify_init()`] initilised with
+/// [`FAN_REPORT_FID`] or [`FAN_REPORT_DIR_FID`]),
+/// you should also expect to receive one or more
+/// additional information records of the structure detailed below
+/// following the generic [`fanotify_event_metadata`] structure within
+/// the read buffer:
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
-struct fanotify_event_info_fid {
+pub struct fanotify_event_info_fid {
     /// It is a generic header that contains information used to
     /// describe an additional information record attached to the
     /// event.  For example, when an fanotify file descriptor is
@@ -111,28 +116,40 @@ struct fanotify_event_info_fid {
     /// name_to_handle_at(2).  It can be used to uniquely identify
     /// a file on a filesystem and can be passed as an argument to
     /// open_by_handle_at(2).  Note that for the directory entry
-    /// modification events FAN_CREATE, FAN_DELETE, and FAN_MOVE,
+    /// modification events [`FAN_CREATE`], [`FAN_DELETE`], and [`FAN_MOVE`],
     /// the file_handle identifies the modified directory and not
     /// the created/deleted/moved child object.  If the value of
-    /// info_type field is FAN_EVENT_INFO_TYPE_DFID_NAME, the file
+    /// info_type field is `FAN_EVENT_INFO_TYPE_DFID_NAME`, the file
     /// handle is followed by a null terminated string that
     /// identifies the created/deleted/moved directory entry name.
-    /// For other events such as FAN_OPEN, FAN_ATTRIB,
-    /// FAN_DELETE_SELF, and FAN_MOVE_SELF, if the value of
-    /// info_type field is FAN_EVENT_INFO_TYPE_FID, the
+    /// For other events such as [`FAN_OPEN`], [`FAN_ATTRIB`],
+    /// [`FAN_DELETE_SELF`], and [`FAN_MOVE_SELF`], if the value of
+    /// info_type field is `FAN_EVENT_INFO_TYPE_FID`, the
     /// file_handle identifies the object correlated to the event.
     /// If the value of info_type field is
-    /// FAN_EVENT_INFO_TYPE_DFID, the file_handle identifies the
+    /// `FAN_EVENT_INFO_TYPE_DFID`, the file_handle identifies the
     /// directory object correlated to the event or the parent
     /// directory of a non-directory object correlated to the
     /// event.  If the value of info_type field is
-    /// FAN_EVENT_INFO_TYPE_DFID_NAME, the file_handle identifies
+    /// `FAN_EVENT_INFO_TYPE_DFID_NAME`, the file_handle identifies
     /// the same directory object that would be reported with
-    /// FAN_EVENT_INFO_TYPE_DFID and the file handle is followed
+    /// `FAN_EVENT_INFO_TYPE_DFID` and the file handle is followed
     /// by a null terminated string that identifies the name of a
     /// directory entry in that directory, or '.' to identify the
     /// directory object itself.
     file_handle: __u8,
+}
+
+#[derive(Debug, Clone)]
+#[repr(C)]
+pub struct fanotify_event_with_fid {
+    /// This is a structure of type [`fanotify_event_metadata`].
+    /// It contains the event metadata
+    pub metadata: fanotify_event_metadata,
+
+    /// This is a structure of type [`fanotify_event_info_fid`].
+    /// It contains the file system id and file handle.
+    pub fid: fanotify_event_info_fid,
 }
 
 #[derive(Debug)]
@@ -143,8 +160,8 @@ pub struct fanotify_response {
     /// fanotify_event_metadata.
     pub fd: __s32,
     /// This field indicates whether or not the permission is to
-    /// be granted.  Its value must be either [`crate::flags::FAN_ALLOW`] to allow
-    /// the file operation or [`crate::flags::FAN_DENY`] to deny the file operation.
+    /// be granted.  Its value must be either [`FAN_ALLOW`] to allow
+    /// the file operation or [`FAN_DENY`] to deny the file operation.
     pub response: __u32,
 }
 

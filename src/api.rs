@@ -14,6 +14,9 @@ use crate::flags::*;
 /// Get current platform sizeof of [`fanotify_event_metadata`].
 const FAN_EVENT_METADATA_LEN: usize = mem::size_of::<fanotify_event_metadata>();
 
+/// Get current platform sizeof of [`fanotify_event_info_fid`].
+const FAN_EVENT_INFO_FID_LEN: usize = mem::size_of::<fanotify_event_info_fid>();
+
 /// Get current platform size of [`fanotify_response`]
 const FAN_WRITE_RESPONSE_LEN: usize = mem::size_of::<fanotify_response>();
 
@@ -340,6 +343,71 @@ pub fn fanotify_read_do(
         }
     }
     Ok(())
+}
+
+/// This function attempts to read from a file descriptor `fanotify_fd`
+/// into a [`Vec`] of [`fanotify_event_with_fid`] which was initilated with 
+/// [`FAN_REPORT_FID`] flag. Returns a Result.
+///
+/// # Argument
+/// * `fd` - file descriptor returned by [`fanotify_init()`]  
+///
+/// # Example
+/// This example will throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// ```rust
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::types::*;
+/// # use naughtyfy::api::*;
+///  // FAN_REPORT_DFID_NAME enables reporting fid
+/// let fd = fanotify_init(FAN_CLASS_NOTIF | FAN_NONBLOCK | FAN_REPORT_DFID_NAME, 0);
+/// match fd {
+///     Ok(fd) => {
+///         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_ONLYDIR,
+///                               FAN_CREATE | FAN_ONDIR,
+///                               AT_FDCWD, "./");
+///         let res = fanotify_read_with_fid(fd);
+///         assert!(res.is_ok());
+///         for chunk in res.unwrap() {
+///             println!("{:#?}",chunk);
+///             if chunk.metadata.fd != -1 {
+///                 fanotify_close(chunk.metadata.fd).unwrap();
+///             }
+///         }
+///     }
+///     Err(e) => {
+///         // This can fail for multiple reason, most common being privileges.
+///         eprintln!("Cannot get fd due to {e}");
+///         assert!(e.code != 0);
+///     }
+/// }
+/// ```
+pub fn fanotify_read_with_fid(
+    fanotify_fd: i32,
+) -> Result<Vec<fanotify_event_with_fid>, FanotifyError<Read>> {
+    let mut vec = Vec::new();
+    unsafe {
+        let buffer =
+            libc::malloc((FAN_EVENT_METADATA_LEN + FAN_EVENT_INFO_FID_LEN) * FAN_EVENT_BUFFER_LEN);
+
+        // allocation may fail due to limited memory.
+        if buffer.is_null() {
+            return Err(Error::last_os_error().into());
+        }
+        let sizeof = libc::read(
+            fanotify_fd,
+            buffer,
+            FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN,
+        );
+        if sizeof != libc::EAGAIN as isize && sizeof > 0 {
+            let src = slice::from_raw_parts(
+                buffer as *mut fanotify_event_with_fid,
+                sizeof as usize / (FAN_EVENT_METADATA_LEN + FAN_EVENT_INFO_FID_LEN),
+            );
+            vec = src.to_vec();
+        }
+        libc::free(buffer);
+    }
+    Ok(vec)
 }
 
 /// Writes up to count bytes from the buffer starting at buf

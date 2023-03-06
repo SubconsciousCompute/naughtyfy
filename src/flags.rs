@@ -161,6 +161,7 @@ pub const FAN_CLASS_PRE_CONTENT: u32 = 0x00000008;
 
 /* Deprecated - do not use this in programs and do not add new flags here! */
 #[deprecated(note = "do not use this in programs!")]
+/// Deprecated, Do not use.
 pub const FAN_ALL_CLASS_BITS: u32 = FAN_CLASS_NOTIF | FAN_CLASS_CONTENT | FAN_CLASS_PRE_CONTENT;
 
 /// Remove the limit of 16384 events for the event queue.  Use
@@ -198,7 +199,7 @@ pub const O_WRONLY: u32 = 1;
 /// This value allows read and write access.
 pub const O_RDWR: u32 = 2;
 
-// The file is opened in append mode.
+/// The file is opened in append mode.
 pub const O_APPEND: u32 = 2000;
 
 /// When possible, the file is opened in nonblocking mode.
@@ -255,7 +256,7 @@ pub const FAN_REPORT_DFID_NAME_TARGET: u32 =
 /* Deprecated - do not use this in programs and do not add new flags here! */
 #[deprecated(note = "do not use this in programs!")]
 #[allow(deprecated)] // only allowing it because of 1-1 mapping
-// Deprecated, Do not use.
+/// Deprecated, Do not use.
 pub const FAN_ALL_INIT_FLAGS: u32 =
     FAN_CLOEXEC | FAN_NONBLOCK | FAN_ALL_CLASS_BITS | FAN_UNLIMITED_QUEUE | FAN_UNLIMITED_MARKS;
 
@@ -310,20 +311,20 @@ pub const FAN_MARK_FLUSH: u32 = 0x00000080;
 /// inode object to be evicted from the inode cache when the memory
 /// pressure on the system is high. The eviction of the inode object
 /// results in the evictable mark also being lost. When the mask of
-/// an evictable inode mark is updated without using the 
-/// `FAN_MARK_EVICATBLE` flag, the marked inode is pinned to inode 
-/// cache and the mark is no longer evictable. When the mask of a 
-/// non-evictable inode mark is updated with the FAN_MARK_EVICTABLE 
-/// flag, the inode mark remains non-evictable and the update fails 
+/// an evictable inode mark is updated without using the
+/// `FAN_MARK_EVICATBLE` flag, the marked inode is pinned to inode
+/// cache and the mark is no longer evictable. When the mask of a
+/// non-evictable inode mark is updated with the FAN_MARK_EVICTABLE
+/// flag, the inode mark remains non-evictable and the update fails
 /// with EEXIST error. Mounts and filesystems are not evictable objects,
-/// therefore, an attempt to create a mount mark or a filesystem mark 
-/// with the FAN_MARK_EVICTABLE flag, will result in the error EINVAL. 
+/// therefore, an attempt to create a mount mark or a filesystem mark
+/// with the FAN_MARK_EVICTABLE flag, will result in the error EINVAL.
 /// For example, inode marks can be used in combination with mount marks
-/// to reduce the amount of events from noninteresting paths. 
-/// The event listener reads events, checks if the path reported in the 
-/// event is of interest, and if it is not, the listener sets a mark with 
-/// an ignore mask on the directory. Evictable inode marks allow using 
-/// this method for a large number of directories without the concern 
+/// to reduce the amount of events from noninteresting paths.
+/// The event listener reads events, checks if the path reported in the
+/// event is of interest, and if it is not, the listener sets a mark with
+/// an ignore mask on the directory. Evictable inode marks allow using
+/// this method for a large number of directories without the concern
 /// of pinning all inodes and exhausting the system's memory.
 pub const FAN_MARK_EVICTABLE: u32 = 0x00000200;
 
@@ -335,7 +336,6 @@ pub const FAN_MARK_EVICTABLE: u32 = 0x00000200;
 pub const FAN_MARK_IGNORE: u32 = 0x00000400;
 
 /* These are NOT bitwise flags.  Both bits can be used togther.  */
-pub const FAN_MARK_INODE: u32 = 0x00000000;
 
 /// Mark the mount specified by pathname.  If pathname is not
 /// itself a mount point, the mount containing pathname will
@@ -360,7 +360,7 @@ pub const FAN_MARK_FILESYSTEM: u32 = 0x00000100;
 pub const FAN_MARK_IGNORE_SURV: u32 = FAN_MARK_IGNORE | FAN_MARK_IGNORED_SURV_MODIFY;
 
 /* Deprecated - do not use this in programs and do not add new flags here! */
-// Deprecated, Do not use.
+/// Deprecated, Do not use.
 #[deprecated(note = "do not use this in programs!")]
 pub const FAN_ALL_MARK_FLAGS: u32 = FAN_MARK_ADD
     | FAN_MARK_REMOVE
@@ -372,7 +372,7 @@ pub const FAN_ALL_MARK_FLAGS: u32 = FAN_MARK_ADD
     | FAN_MARK_FLUSH;
 
 /* Deprecated - do not use this in programs and do not add new flags here! */
-// Deprecated, Do not use.
+/// Deprecated, Do not use.
 #[deprecated(note = "do not use this in programs!")]
 pub const FAN_ALL_EVENTS: u64 = FAN_ACCESS | FAN_MODIFY | FAN_CLOSE | FAN_OPEN;
 
@@ -380,12 +380,12 @@ pub const FAN_ALL_EVENTS: u64 = FAN_ACCESS | FAN_MODIFY | FAN_CLOSE | FAN_OPEN;
  * All events which require a permission response from userspace
  */
 /* Deprecated - do not use this in programs and do not add new flags here! */
-// Deprecated, Do not use.
+/// Deprecated, Do not use.
 #[deprecated(note = "do not use this in programs!")]
 pub const FAN_ALL_PERM_EVENTS: u64 = FAN_OPEN_PERM | FAN_ACCESS_PERM;
 
 /* Deprecated - do not use this in programs and do not add new flags here! */
-// Deprecated, Do not use.
+/// Deprecated, Do not use.
 #[deprecated(note = "do not use this in programs!")]
 #[allow(deprecated)] // only allowing it because of 1-1 mapping
 pub const FAN_ALL_OUTGOING_EVENTS: u64 = FAN_ALL_EVENTS | FAN_ALL_PERM_EVENTS | FAN_Q_OVERFLOW;
