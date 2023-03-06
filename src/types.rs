@@ -89,13 +89,13 @@ pub struct fanotify_event_info_fid {
     /// event.  For example, when an fanotify file descriptor is
     /// created using [`FAN_REPORT_FID`], a single information record
     /// is expected to be attached to the event with info_type
-    /// field value of [`FAN_EVENT_INFO_TYPE_FID`].  When an fanotify
+    /// field value of `FAN_EVENT_INFO_TYPE_FID`.  When an fanotify
     /// file descriptor is created using the combination of
     /// [`FAN_REPORT_FID`] and [`FAN_REPORT_DIR_FID`], there may be two
     /// information records attached to the event: one with
-    /// info_type field value of [`FAN_EVENT_INFO_TYPE_DFID`],
+    /// info_type field value of `FAN_EVENT_INFO_TYPE_DFID`,
     /// identifying a parent directory object, and one with
-    /// info_type field value of [`FAN_EVENT_INFO_TYPE_FID`],
+    /// info_type field value of `FAN_EVENT_INFO_TYPE_FID`,
     /// identifying a non-directory object.  The
     /// fanotify_event_info_header contains a len field.  The
     /// value of len is the size of the additional information

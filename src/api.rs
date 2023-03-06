@@ -346,7 +346,7 @@ pub fn fanotify_read_do(
 }
 
 /// This function attempts to read from a file descriptor `fanotify_fd`
-/// into a [`Vec`] of [`fanotify_event_with_fid`] which was initilated with 
+/// into a [`Vec`] of [`fanotify_event_with_fid`] which was initilated with
 /// [`FAN_REPORT_FID`] flag. Returns a Result.
 ///
 /// # Argument
