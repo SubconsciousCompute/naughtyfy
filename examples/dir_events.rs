@@ -20,7 +20,7 @@ fn main() {
         FAN_MARK_ADD | FAN_MARK_MOUNT,
         FAN_ACCESS | FAN_MODIFY | FAN_CLOSE | FAN_OPEN | FAN_EVENT_ON_CHILD,
         AT_FDCWD,
-        "/",
+        "/tmp",
     );
     if status.is_err() {
         eprintln!("Encountered err due to {status:#?}");
@@ -29,8 +29,8 @@ fn main() {
 
     loop {
         fanotify_read_do(fd, |md| {
-            let _path = std::fs::read_link(format!("/proc/self/fd/{}", md.fd)).unwrap_or_default();
-            // println!("{:?} at {:?}", md.mask, path);
+            let path = std::fs::read_link(format!("/proc/self/fd/{}", md.fd)).unwrap_or_default();
+            println!("{:?} at {:?}", md.mask, path);
         })
         .unwrap();
     }
