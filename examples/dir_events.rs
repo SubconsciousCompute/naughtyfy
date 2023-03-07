@@ -2,9 +2,9 @@ use naughtyfy::api::*;
 use naughtyfy::flags::*;
 
 fn main() {
-    let fd = fanotify_init(
+    let fd = init(
         FAN_CLOEXEC
-            | FAN_NONBLOCK
+            // | FAN_NONBLOCK
             | FAN_UNLIMITED_QUEUE
             | FAN_UNLIMITED_MARKS
             | FAN_CLASS_NOTIF
@@ -15,7 +15,7 @@ fn main() {
         eprintln!("Encountered err due to {fd:?}");
     }
     let fd = fd.unwrap();
-    let status = fanotify_mark(
+    let status = mark(
         fd,
         FAN_MARK_ADD | FAN_MARK_MOUNT,
         FAN_ACCESS | FAN_MODIFY | FAN_CLOSE | FAN_OPEN | FAN_EVENT_ON_CHILD,
@@ -28,12 +28,10 @@ fn main() {
     let _status = status.unwrap();
 
     loop {
-        let res = fanotify_read(fd).unwrap();
-        for metadata in res {
-            let path =
-                std::fs::read_link(format!("/proc/self/fd/{}", metadata.fd)).unwrap_or_default();
-            println!("{:?} opened at {:?}", metadata, path);
-            fanotify_close(metadata.fd).unwrap();
-        }
+        read_do(fd, |md| {
+            let path = std::fs::read_link(format!("/proc/self/fd/{}", md.fd)).unwrap_or_default();
+            println!("{:?} at {:?}", md.mask, path);
+        })
+        .unwrap();
     }
 }

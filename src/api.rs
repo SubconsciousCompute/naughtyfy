@@ -14,6 +14,9 @@ use crate::flags::*;
 /// Get current platform sizeof of [`fanotify_event_metadata`].
 const FAN_EVENT_METADATA_LEN: usize = mem::size_of::<fanotify_event_metadata>();
 
+/// Get current platform sizeof of [`fanotify_event_info_fid`].
+const FAN_EVENT_INFO_FID_LEN: usize = mem::size_of::<fanotify_event_info_fid>();
+
 /// Get current platform size of [`fanotify_response`]
 const FAN_WRITE_RESPONSE_LEN: usize = mem::size_of::<fanotify_response>();
 
@@ -23,7 +26,7 @@ pub static mut FAN_EVENT_BUFFER_LEN: usize = 250;
 /// Initializes a new fanotify group and returns a
 /// file descriptor for the event queue associated with the group.
 ///
-/// The file descriptor is used in calls to [`fanotify_mark()`] to
+/// The file descriptor is used in calls to [`mark()`] to
 /// specify the files, directories, mounts, or filesystems for which
 /// fanotify events shall be created.  These events are received by
 /// reading from the file descriptor.  Some events are only
@@ -38,7 +41,7 @@ pub static mut FAN_EVENT_BUFFER_LEN: usize = 250;
 /// In the current implementation, the number of fanotify groups per
 /// user is limited to 128.  This limit cannot be overridden.
 ///
-/// Calling [`fanotify_init()`] requires the `CAP_SYS_ADMIN` capability.
+/// Calling [`init()`] requires the `CAP_SYS_ADMIN` capability.
 /// This constraint might be relaxed in future versions of the API.
 /// Therefore, certain additional capability checks have been
 /// implemented as indicated below.
@@ -90,7 +93,7 @@ pub static mut FAN_EVENT_BUFFER_LEN: usize = 250;
 /// ```rust
 /// # use naughtyfy::flags::*;
 /// # use naughtyfy::api::*;
-/// let fd = fanotify_init(FAN_CLASS_NOTIF | FAN_NONBLOCK, O_RDONLY);
+/// let fd = init(FAN_CLASS_NOTIF | FAN_NONBLOCK, O_RDONLY);
 /// match fd {
 ///     Ok(fd) => {
 ///         assert!(fd >= 0);
@@ -102,7 +105,7 @@ pub static mut FAN_EVENT_BUFFER_LEN: usize = 250;
 /// }
 /// ```
 ///
-pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, FanotifyError<Init>> {
+pub fn init(flags: u32, event_f_flags: u32) -> Result<i32, FanotifyError<Init>> {
     unsafe {
         match libc::fanotify_init(flags, event_f_flags) {
             -1 => Err(Error::last_os_error().into()),
@@ -116,7 +119,7 @@ pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, FanotifyErro
 /// filesystem object that is to be marked.
 ///
 /// # Arguments
-/// * `fanotify_fd` - File descriptor returned by [`fanotify_init()`].
+/// * `fanotify_fd` - File descriptor returned by [`init()`].
 /// * `flags` - Bit mask describing the modification to perform. <br>
 ///     It must include **exactly one** of the following values:
 ///     * [`FAN_MARK_ADD`]
@@ -178,15 +181,15 @@ pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, FanotifyErro
 ///   directory.
 ///
 /// # Example
-/// This example will throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// This example may throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
 /// ```rust
 /// # use naughtyfy::flags::*;
 /// # use naughtyfy::types::*;
 /// # use naughtyfy::api::*;
-/// let fd = fanotify_init(FAN_CLASS_NOTIF, 0);
+/// let fd = init(FAN_CLASS_NOTIF, 0);
 /// match fd {
 ///     Ok(fd) => {
-///         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
+///         let m = mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
 ///         assert!(m.is_ok());
 ///         assert!(fd >= 0);
 ///     }
@@ -197,7 +200,7 @@ pub fn fanotify_init(flags: u32, event_f_flags: u32) -> Result<i32, FanotifyErro
 ///     }
 /// }
 /// ```
-pub fn fanotify_mark<P: ?Sized + Path>(
+pub fn mark<P: ?Sized + Path>(
     fanotify_fd: i32,
     flags: u32,
     mask: u64,
@@ -217,25 +220,25 @@ pub fn fanotify_mark<P: ?Sized + Path>(
 /// into a `Vec<fanotify_event_metadata>` and return a Result.
 /// # **Important**
 /// Don't forget to close `fd` of all [`fanotify_event_metadata`] returned from this function
-/// using [`fanotify_close()`]
+/// using [`close()`]
 ///
 /// # Argument
-/// * `fd` - file descriptor returned by [`fanotify_init()`]  
+/// * `fd` - file descriptor returned by [`init()`]  
 ///
 /// # Example
-/// This example will throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// This example may throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
 /// ```rust
 /// # use naughtyfy::flags::*;
 /// # use naughtyfy::types::*;
 /// # use naughtyfy::api::*;
-/// let fd = fanotify_init(FAN_CLASS_NOTIF, 0);
+/// let fd = init(FAN_CLASS_NOTIF, 0);
 /// match fd {
 ///     Ok(fd) => {
-///         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
-///         let res = fanotify_read(fd);
+///         let m = mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
+///         let res = read(fd);
 ///         assert!(res.is_ok());
 ///         for meta in res.unwrap() {
-///             fanotify_close(meta.fd).unwrap();
+///             close(meta.fd).unwrap();
 ///         }
 ///     }
 ///     Err(e) => {
@@ -245,9 +248,7 @@ pub fn fanotify_mark<P: ?Sized + Path>(
 ///     }
 /// }
 /// ```
-pub fn fanotify_read(
-    fanotify_fd: i32,
-) -> Result<Vec<fanotify_event_metadata>, FanotifyError<Read>> {
+pub fn read(fanotify_fd: i32) -> Result<Vec<fanotify_event_metadata>, FanotifyError<Read>> {
     let mut vec = Vec::new();
     unsafe {
         let buffer = libc::malloc(FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN);
@@ -271,6 +272,210 @@ pub fn fanotify_read(
         libc::free(buffer);
     }
     Ok(vec)
+}
+
+/// This function attempts to read from a file descriptor `fanotify_fd`
+/// and performs `process_metadata` on [`fanotify_event_metadata`] recieved after read.
+/// returns `Result<(),FanotifyError>`.
+///
+/// This function closes `metadata.fd` after calling `process_metadata`
+///
+/// # Argument
+/// * `fd` - file descriptor returned by [`init()`]  
+/// * `process_metadata` - Function / Closure for processing [`fanotify_event_metadata`].
+///
+/// # Example
+/// This example may throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// ```rust
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::types::*;
+/// # use naughtyfy::api::*;
+/// fn procedure(md: &fanotify_event_metadata) {
+///     println!("{md:#?}");
+/// }
+///
+/// fn main() {
+///     let fd = init(FAN_CLASS_NOTIF, 0);
+///      match fd {
+///          Ok(fd) => {
+///              let m = mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
+///              let res = read(fd);
+///              assert!(res.is_ok());
+///              read_do(fd,procedure);
+///          }
+///          Err(e) => {
+///              // This can fail for multiple reason, most common being privileges.
+///              eprintln!("Cannot get fd due to {e}");
+///              assert!(e.code != 0);
+///          }
+///      }
+/// }
+/// ```
+pub fn read_do(
+    fanotify_fd: i32,
+    process_metadata: fn(&fanotify_event_metadata),
+) -> Result<(), FanotifyError> {
+    unsafe {
+        let buffer = libc::malloc(FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN);
+
+        // allocation may fail due to limited memory.
+        if buffer.is_null() {
+            return Err(Error::last_os_error().into());
+        }
+        let sizeof = libc::read(
+            fanotify_fd,
+            buffer,
+            FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN,
+        );
+        if sizeof != libc::EAGAIN as isize && sizeof > 0 {
+            for metadata in slice::from_raw_parts(
+                buffer as *mut fanotify_event_metadata,
+                sizeof as usize / FAN_EVENT_METADATA_LEN,
+            ) {
+                process_metadata(metadata);
+                if let Err(e) = close(metadata.fd) {
+                    eprintln!("{e}");
+                }
+            }
+            libc::free(buffer);
+        }
+    }
+    Ok(())
+}
+
+/// This function attempts to read from a file descriptor `fanotify_fd`
+/// into a [`Vec`] of [`fanotify_event_with_fid`] which was initilated with
+/// [`FAN_REPORT_FID`] or [`FAN_REPORT_DIR_FID`] flag. Returns the vector wrapped in `Result`.
+///
+/// # Important
+/// Use this only when `fd` is initialized with [`FAN_REPORT_FID`] or [`FAN_REPORT_DIR_FID`] flag.
+///
+/// # Argument
+/// * `fd` - file descriptor returned by [`init()`]  
+///
+/// # Example
+/// This example may throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// ```rust
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::types::*;
+/// # use naughtyfy::api::*;
+///  // FAN_REPORT_DFID_NAME enables reporting fid
+/// let fd = init(FAN_CLASS_NOTIF | FAN_NONBLOCK | FAN_REPORT_DFID_NAME, 0);
+/// match fd {
+///     Ok(fd) => {
+///         let m = mark(fd, FAN_MARK_ADD | FAN_MARK_ONLYDIR,
+///                               FAN_CREATE | FAN_ONDIR,
+///                               AT_FDCWD, "./");
+///         let res = read_with_fid(fd);
+///         assert!(res.is_ok());
+///         for chunk in res.unwrap() {
+///             println!("{:#?}",chunk);
+///             if chunk.metadata.fd != -1 {
+///                 close(chunk.metadata.fd).unwrap();
+///             }
+///         }
+///     }
+///     Err(e) => {
+///         // This can fail for multiple reason, most common being privileges.
+///         eprintln!("Cannot get fd due to {e}");
+///         assert!(e.code != 0);
+///     }
+/// }
+/// ```
+pub fn read_with_fid(
+    fanotify_fd: i32,
+) -> Result<Vec<fanotify_event_with_fid>, FanotifyError<Read>> {
+    let mut vec = Vec::new();
+    unsafe {
+        let buffer =
+            libc::malloc((FAN_EVENT_METADATA_LEN + FAN_EVENT_INFO_FID_LEN) * FAN_EVENT_BUFFER_LEN);
+
+        // allocation may fail due to limited memory.
+        if buffer.is_null() {
+            return Err(Error::last_os_error().into());
+        }
+        let sizeof = libc::read(
+            fanotify_fd,
+            buffer,
+            FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN,
+        );
+        if sizeof != libc::EAGAIN as isize && sizeof > 0 {
+            let src = slice::from_raw_parts(
+                buffer as *mut fanotify_event_with_fid,
+                sizeof as usize / (FAN_EVENT_METADATA_LEN + FAN_EVENT_INFO_FID_LEN),
+            );
+            vec = src.to_vec();
+        }
+        libc::free(buffer);
+    }
+    Ok(vec)
+}
+
+/// This function attempts to read from a file descriptor `fanotify_fd`
+/// which was initilated with [`FAN_REPORT_FID`] or [`FAN_REPORT_DIR_FID`] flag
+/// and performs `process_metadata_fid` on [`fanotify_event_with_fid`]
+/// recieved after read. Returns `Result<(),FanotifyError>`.
+///
+/// # Argument
+/// * `fd` - file descriptor returned by [`init()`]  
+/// * `process_metadata` - Function / Closure for processing [`fanotify_event_with_fid`].
+///
+/// # Example
+/// This example may throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
+/// ```rust
+/// # use naughtyfy::flags::*;
+/// # use naughtyfy::types::*;
+/// # use naughtyfy::api::*;
+/// fn procedure(md: &fanotify_event_with_fid) {
+///     println!("{md:#?}");
+/// }
+///
+/// fn main() {
+///     let fd = init(FAN_CLASS_NOTIF | FAN_NONBLOCK | FAN_REPORT_DFID_NAME, 0);
+///      match fd {
+///          Ok(fd) => {
+///              let m = mark(fd, FAN_MARK_ADD | FAN_MARK_ONLYDIR,
+///                               FAN_CREATE | FAN_ONDIR,
+///                               AT_FDCWD, "./");
+///              let res = read_with_fid_do(fd, procedure);
+///              assert!(res.is_ok());
+///          }
+///          Err(e) => {
+///              // This can fail for multiple reason, most common being privileges.
+///              eprintln!("Cannot get fd due to {e}");
+///              assert!(e.code != 0);
+///          }
+///      }
+/// }
+/// ```
+pub fn read_with_fid_do(
+    fanotify_fd: i32,
+    process_metadata_fid: fn(&fanotify_event_with_fid),
+) -> Result<(), FanotifyError> {
+    unsafe {
+        let buffer =
+            libc::malloc((FAN_EVENT_METADATA_LEN + FAN_EVENT_INFO_FID_LEN) * FAN_EVENT_BUFFER_LEN);
+
+        // allocation may fail due to limited memory.
+        if buffer.is_null() {
+            return Err(Error::last_os_error().into());
+        }
+        let sizeof = libc::read(
+            fanotify_fd,
+            buffer,
+            FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN,
+        );
+        if sizeof != libc::EAGAIN as isize && sizeof > 0 {
+            for meta_fid in slice::from_raw_parts(
+                buffer as *mut fanotify_event_with_fid,
+                sizeof as usize / (FAN_EVENT_METADATA_LEN + FAN_EVENT_INFO_FID_LEN),
+            ) {
+                process_metadata_fid(meta_fid);
+            }
+        }
+        libc::free(buffer);
+    }
+    Ok(())
 }
 
 /// Writes up to count bytes from the buffer starting at buf
@@ -309,23 +514,23 @@ pub fn fanotify_read(
 /// # use naughtyfy::flags::*;
 /// # use naughtyfy::types::*;
 /// # use naughtyfy::api::*;
-/// let fd = fanotify_init(FAN_CLOEXEC | FAN_CLASS_CONTENT | FAN_NONBLOCK,
+/// let fd = init(FAN_CLOEXEC | FAN_CLASS_CONTENT | FAN_NONBLOCK,
 ///                         O_RDONLY | O_LARGEFILE);
 /// match fd {
 ///     Ok(fd) => {
-///         let m = fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
+///         let m = mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
 ///         assert!(m.is_ok());
 ///         assert!(fd >= 0);
 ///         
-///         let events = fanotify_read(fd).unwrap();
+///         let events = read(fd).unwrap();
 ///         if events.len() > 1 {
 ///             for event in events {
 ///                 println!("{event:#?}");
 ///
-///                 let res = fanotify_write(event.fd,FAN_ALLOW);
+///                 let res = write(event.fd,FAN_ALLOW);
 ///             }
 ///         }
-///         fanotify_close(fd);
+///         close(fd);
 ///     }
 ///     Err(e) => {
 ///         // This can fail for multiple reason, most common being privileges.
@@ -334,7 +539,7 @@ pub fn fanotify_read(
 ///     }
 /// }
 /// ```
-pub fn fanotify_write(fd: i32, response: u32) -> Result<isize, FanotifyError<Write>> {
+pub fn write(fd: i32, response: u32) -> Result<isize, FanotifyError<Write>> {
     let res = &fanotify_response { fd, response };
     unsafe {
         match libc::write(
@@ -348,21 +553,21 @@ pub fn fanotify_write(fd: i32, response: u32) -> Result<isize, FanotifyError<Wri
     }
 }
 
-/// Closes the file descriptor returned by [`fanotify_init()`] or [`fanotify_read()`]
+/// Closes the file descriptor returned by [`init()`] or [`read()`]
 ///
 /// # Argument
-/// * `fd` - file descriptor returned by [`fanotify_init()`] or [`fanotify_event_metadata`]`.fd`
+/// * `fd` - file descriptor returned by [`init()`] or [`fanotify_event_metadata`]`.fd`
 ///
 /// # Example
 /// ```rust
 /// # use naughtyfy::flags::*;
 /// # use naughtyfy::types::*;
 /// # use naughtyfy::api::*;
-/// let fd = fanotify_init(FAN_CLOEXEC | FAN_CLASS_CONTENT | FAN_NONBLOCK,
+/// let fd = init(FAN_CLOEXEC | FAN_CLASS_CONTENT | FAN_NONBLOCK,
 ///                         O_RDONLY | O_LARGEFILE);
 /// match fd {
 ///     Ok(fd) => {
-///         let status = fanotify_close(fd);
+///         let status = close(fd);
 ///         assert!(status.is_ok());
 ///     }
 ///     Err(e) => {
@@ -372,7 +577,7 @@ pub fn fanotify_write(fd: i32, response: u32) -> Result<isize, FanotifyError<Wri
 ///     }
 /// }
 /// ```
-pub fn fanotify_close(fd: i32) -> Result<(), FanotifyError<Close>> {
+pub fn close(fd: i32) -> Result<(), FanotifyError<Close>> {
     unsafe {
         match libc::close(fd) {
             0 => Ok(()),
