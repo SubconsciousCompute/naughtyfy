@@ -3,6 +3,8 @@
 extern crate libc;
 // For documentaton linking
 #[allow(unused_imports)]
+use crate::api::read_with_fid;
+#[allow(unused_imports)]
 use libc::{EAGAIN, EEXIST, EINVAL, ENOTDIR};
 /* the following events that user-space can register for */
 
@@ -230,13 +232,15 @@ pub const AT_FDCWD: i32 = -100;
 /// Report pidfd for event->pid
 pub const FAN_REPORT_PIDFD: u32 = 0x00000080; /* Report pidfd for event->pid */
 
-/// event->pid is thread id
+/// Reports thred id instead of PID in event metadata
 pub const FAN_REPORT_TID: u32 = 0x00000100; /* event->pid is thread id */
 
-/// Report unique file id
+/// Report unique file id instead of file descriptor in metadata.
+/// Use [`read_with_fid()`] to read events if fnaotify is initialized with this flag
 pub const FAN_REPORT_FID: u32 = 0x00000200; /* Report unique file id */
 
-/// Report unique directory id
+/// Report unique directory id instead of file descriptor in metadata.
+/// Use [`read_with_fid()`] to read events if fnaotify is initialized with this flag
 pub const FAN_REPORT_DIR_FID: u32 = 0x00000400; /* Report unique directory id */
 
 /// Report events with name

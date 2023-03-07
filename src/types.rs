@@ -75,7 +75,7 @@ pub struct fanotify_event_info_header {
 }
 
 /// In case of an fanotify group that identifies filesystem objects
-/// by file handles (i.e. [`fanotify_init()`] initilised with
+/// by file handles (i.e. [`init()`] initilised with
 /// [`FAN_REPORT_FID`] or [`FAN_REPORT_DIR_FID`]),
 /// you should also expect to receive one or more
 /// additional information records of the structure detailed below

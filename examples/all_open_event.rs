@@ -9,12 +9,12 @@ fn print_meta(md: &fanotify_event_metadata) {
 }
 
 fn main() {
-    let fd = fanotify_init(FAN_CLASS_NOTIF, O_RDONLY);
+    let fd = init(FAN_CLASS_NOTIF, O_RDONLY);
     if fd.is_err() {
         eprintln!("Encountered err due to {fd:?}");
     }
     let fd = fd.unwrap();
-    let status = fanotify_mark(
+    let status = mark(
         fd,
         FAN_MARK_ADD | FAN_MARK_MOUNT,
         FAN_OPEN | FAN_EVENT_ON_CHILD,
@@ -28,6 +28,6 @@ fn main() {
     let _status = status.unwrap();
 
     loop {
-        fanotify_read_do(fd, print_meta).unwrap();
+        read_do(fd, print_meta).unwrap();
     }
 }

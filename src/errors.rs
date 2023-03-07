@@ -4,12 +4,12 @@
 //! # Example
 //! ```rust
 //! # use naughtyfy::flags::FAN_CLASS_NOTIF;
-//! # use naughtyfy::api::fanotify_init;
+//! # use naughtyfy::api::init;
 //! # use naughtyfy::api::FAN_EVENT_BUFFER_LEN;
 //! unsafe {
 //!     FAN_EVENT_BUFFER_LEN = 99999999999999;
 //! }
-//! let fd = fanotify_init(FAN_CLASS_NOTIF, 0);
+//! let fd = init(FAN_CLASS_NOTIF, 0);
 //! println!("{:?}",fd);
 //! ```
 
@@ -19,19 +19,19 @@ use std::fmt;
 #[allow(unused_imports)]
 use crate::api::*;
 
-/// Marks the [`FanotifyError`] for [`fanotify_init()`]
+/// Marks the [`FanotifyError`] for [`init()`]
 pub struct Init;
 
-/// Marks the [`FanotifyError`] for [`fanotify_mark()`]
+/// Marks the [`FanotifyError`] for [`mark()`]
 pub struct Mark;
 
-/// Marks the [`FanotifyError`] for [`fanotify_read()`]
+/// Marks the [`FanotifyError`] for [`read()`]
 pub struct Read;
 
-/// Marks the [`FanotifyError`] for [`fanotify_write()`]
+/// Marks the [`FanotifyError`] for [`write()`]
 pub struct Write;
 
-/// Marks the [`FanotifyError`] for [`fanotify_close()`]
+/// Marks the [`FanotifyError`] for [`close()`]
 pub struct Close;
 
 /// Matches proper description with errno recieved after calling
@@ -53,7 +53,7 @@ fn code_desc<T>(code: i32) -> String {
                     failed."
                 .to_string(),
 
-            libc::ENOSYS => "This kernel does not implement fanotify_init().  The
+            libc::ENOSYS => "This kernel does not implement init().  The
                     fanotify API is available only if the kernel was
                     configured with CONFIG_FANOTIFY."
                 .to_string(),
@@ -65,12 +65,12 @@ fn code_desc<T>(code: i32) -> String {
             _ => "Unknown error occured".to_string(),
         },
         "naughtyfy::errors::Mark" => match code {
-            libc::EBADF => "An invalid file descriptor was passed in fanotify_fd or 
+            libc::EBADF => "An invalid file descriptor was passed in fd or 
                 pathname is relative but dirfd is neither AT_FDCWD nor a
                 valid file descriptor."
                 .to_string(),
             libc::EINVAL => "An invalid value was passed in flags or mask, or
-                fanotify_fd was not an fanotify file descriptor
+                fd was not an fanotify file descriptor
                 or the fanotify file descriptor was opened with
                 FAN_CLASS_NOTIF or the fanotify group identifies
                 filesystem objects by file handles and mask contains a
@@ -91,9 +91,9 @@ fn code_desc<T>(code: i32) -> String {
             libc::ENOSPC => "The number of marks exceeds the limit of 8192 and the
                 FAN_UNLIMITED_MARKS flag was not specified when the
                 fanotify file descriptor was created with
-                fanotify_init()."
+                init()."
                 .to_string(),
-            libc::ENOSYS => "This kernel does not implement fanotify_mark().  The
+            libc::ENOSYS => "This kernel does not implement mark().  The
                 fanotify API is available only if the kernel was
                 configured with CONFIG_FANOTIFY."
                 .to_string(),
@@ -142,7 +142,7 @@ fn code_desc<T>(code: i32) -> String {
                 and either the address specified in buf, the value
                 specified in count, or the file offset is not suitably
                 aligned or fd was created via a call to timerfd_create(2) and the
-                wrong size buffer was given to fanotify_read()"
+                wrong size buffer was given to read()"
                 .to_string(),
             libc::EIO => "I/O error.  This will happen for example when the process
                 is in a background process group, tries to read from its
