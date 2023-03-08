@@ -28,6 +28,11 @@ fn main() {
     let _status = status.unwrap();
 
     loop {
-        read_do(fd, print_meta).unwrap();
+        // read_do(fd, print_meta).unwrap();
+        let data = read(fd).unwrap();
+        println!("{:#?} {:?}", data, data.as_ptr());
+        data.iter().for_each(|e| {
+            close(e.fd);
+        });
     }
 }

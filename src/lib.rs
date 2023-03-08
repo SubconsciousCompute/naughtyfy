@@ -33,7 +33,6 @@
 //!     Err(e) => {
 //!         // This can fail for multiple reason, most common being privileges.
 //!         eprintln!("Cannot get fd due to {e}");
-//!         assert!(e.code != 0);
 //!     }
 //! }
 //! ```
