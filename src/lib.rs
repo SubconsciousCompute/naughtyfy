@@ -17,7 +17,7 @@
 //! # use naughtyfy::flags::*;
 //! # use naughtyfy::types::*;
 //! # use naughtyfy::api::*;
-//! let fd = init(FAN_CLOEXEC | FAN_CLASS_CONTENT | FAN_NONBLOCK,
+//! let fd = init(FAN_CLOEXEC | FAN_CLASS_CONTENT ,
 //!                         O_RDONLY | O_LARGEFILE);
 //! match fd {
 //!     Ok(fd) => {
@@ -33,7 +33,6 @@
 //!     Err(e) => {
 //!         // This can fail for multiple reason, most common being privileges.
 //!         eprintln!("Cannot get fd due to {e}");
-//!         assert!(e.code != 0);
 //!     }
 //! }
 //! ```
@@ -42,6 +41,3 @@ pub mod api;
 pub mod errors;
 pub mod flags;
 pub mod types;
-
-#[cfg(test)]
-mod tests {}
