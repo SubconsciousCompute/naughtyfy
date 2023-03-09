@@ -1,12 +1,5 @@
 use naughtyfy::api::*;
 use naughtyfy::flags::*;
-use naughtyfy::types::fanotify_event_metadata;
-
-// Function that process the metadata recieved.
-fn print_meta(md: &fanotify_event_metadata) {
-    let path = std::fs::read_link(format!("/proc/self/fd/{}", md.fd)).unwrap_or_default();
-    println!("{:?} opened at {:?}", md, path);
-}
 
 fn main() {
     let fd = init(FAN_CLASS_NOTIF, O_RDONLY);
@@ -30,9 +23,9 @@ fn main() {
     loop {
         // read_do(fd, print_meta).unwrap();
         let data = read(fd).unwrap();
-        println!("{:#?} {:?}", data, data.as_ptr());
+        println!("{:#?}", data);
         data.iter().for_each(|e| {
-            close(e.fd);
+            close(e.fd).unwrap();
         });
     }
 }

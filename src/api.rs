@@ -9,8 +9,6 @@ use std::io::Error;
 use std::mem;
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
-use std::slice;
-use std::sync::MutexGuard;
 
 #[allow(unused_imports)]
 use crate::flags::*;
@@ -18,8 +16,8 @@ use crate::flags::*;
 /// Get current platform sizeof of [`fanotify_event_metadata`].
 const FAN_EVENT_METADATA_LEN: usize = mem::size_of::<fanotify_event_metadata>();
 
-/// Get current platform sizeof of [`fanotify_event_info_fid`].
-const FAN_EVENT_INFO_FID_LEN: usize = mem::size_of::<fanotify_event_info_fid>();
+/// Get current platform sizeof of [`fanotify_event_with_fid`].
+const FAN_EVENT_METADATA_FID_LEN: usize = mem::size_of::<fanotify_event_with_fid>();
 
 /// Get current platform size of [`fanotify_response`]
 const FAN_WRITE_RESPONSE_LEN: usize = mem::size_of::<fanotify_response>();
@@ -257,20 +255,37 @@ pub fn mark<P: ?Sized + Path>(
 /// }
 /// ```
 pub fn read(fanotify_fd: RawFd) -> Result<Vec<fanotify_event_metadata>, FanotifyError> {
-    let mut len = 0;
+    let len;
     unsafe {
-        len = *FAN_EVENT_BUFFER_LEN.lock().unwrap_or_else(|e| {
-            eprintln!("Cannot lock FAN_EVENT_BUFFER_LEN muetx, setting default len to 250");
-            MutexGuard::from(250 as usize)
-        });
+        match FAN_EVENT_BUFFER_LEN.lock() {
+            Ok(value) => {
+                len = *value;
+            }
+            Err(e) => {
+                eprintln!("{e}");
+                return Err(FanotifyError::Read(libc::ENOMEM));
+            }
+        }
     }
-    let mut buff: Vec<fanotify_event_metadata> = Vec::with_capacity(*len);
+    let mut buff: Vec<fanotify_event_metadata> = Vec::with_capacity(len);
+    let sizeof;
     unsafe {
-        let sizeof = libc::read(
+        // `libc::read()` is unsafe
+        sizeof = libc::read(
             fanotify_fd,
             buff.as_mut_ptr() as *mut c_void,
-            FAN_EVENT_METADATA_LEN * *len,
+            FAN_EVENT_METADATA_LEN * len,
         );
+    }
+
+    if sizeof == -1 {
+        return Err(FanotifyError::Read(
+            Error::last_os_error().raw_os_error().unwrap_or_default(),
+        ));
+    }
+
+    unsafe {
+        // Vec.set_len() is unsafe operation. len must be less than capacity, which is gur
         buff.set_len(sizeof as usize / FAN_EVENT_METADATA_LEN);
     }
     Ok(buff)
@@ -317,31 +332,45 @@ pub fn read_do(
     fanotify_fd: RawFd,
     process_metadata: fn(&fanotify_event_metadata),
 ) -> Result<(), FanotifyError> {
+    let len;
     unsafe {
-        let buffer = libc::malloc(FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN);
-
-        // allocation may fail due to limited memory.
-        if buffer.is_null() {
-            return Err(FanotifyError::Read(
-                Error::last_os_error().raw_os_error().unwrap_or_default(),
-            ));
-        }
-        let sizeof = libc::read(
-            fanotify_fd,
-            buffer,
-            FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN,
-        );
-        if sizeof != libc::EAGAIN as isize && sizeof > 0 {
-            for metadata in slice::from_raw_parts(
-                buffer as *mut fanotify_event_metadata,
-                sizeof as usize / FAN_EVENT_METADATA_LEN,
-            ) {
-                process_metadata(metadata);
-                if let Err(e) = close(metadata.fd) {
-                    eprintln!("{e}");
-                }
+        match FAN_EVENT_BUFFER_LEN.lock() {
+            Ok(value) => {
+                len = *value;
             }
-            libc::free(buffer);
+            Err(e) => {
+                eprintln!("{e}");
+                return Err(FanotifyError::Read(libc::ENOMEM));
+            }
+        }
+    }
+    let mut buff: Vec<fanotify_event_metadata> = Vec::with_capacity(len);
+    let sizeof;
+    unsafe {
+        // `libc::read()` is unsafe
+        sizeof = libc::read(
+            fanotify_fd,
+            buff.as_mut_ptr() as *mut c_void,
+            FAN_EVENT_METADATA_LEN * len,
+        );
+    }
+
+    if sizeof == -1 {
+        return Err(FanotifyError::Read(
+            Error::last_os_error().raw_os_error().unwrap_or_default(),
+        ));
+    }
+
+    unsafe {
+        // Vec.set_len() is unsafe operation. len must be less than capacity, which is gur
+        buff.set_len(sizeof as usize / FAN_EVENT_METADATA_LEN);
+    }
+    for event in &buff {
+        process_metadata(event);
+
+        // Close all the fd read from the buffer. Report error if any.
+        if let Err(e) = close(event.fd) {
+            eprintln!("Unable to close fd {} because of {e}", event.fd);
         }
     }
     Ok(())
@@ -356,63 +385,41 @@ pub fn read_do(
 ///
 /// # Argument
 /// * `fd` - file descriptor returned by [`init()`]  
-///
-/// # Example
-/// This example may throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
-/// ```rust
-/// # use naughtyfy::flags::*;
-/// # use naughtyfy::types::*;
-/// # use naughtyfy::api::*;
-///  // FAN_REPORT_DFID_NAME enables reporting fid
-/// let fd = init(FAN_CLASS_NOTIF | FAN_NONBLOCK | FAN_REPORT_DFID_NAME, 0);
-/// match fd {
-///     Ok(fd) => {
-///         let m = mark(fd, FAN_MARK_ADD | FAN_MARK_ONLYDIR,
-///                               FAN_CREATE | FAN_ONDIR,
-///                               AT_FDCWD, "./");
-///         let res = read_with_fid(fd);
-///         assert!(res.is_ok());
-///         for chunk in res.unwrap() {
-///             println!("{:#?}",chunk);
-///             if chunk.metadata.fd != -1 {
-///                 close(chunk.metadata.fd).unwrap();
-///             }
-///         }
-///     }
-///     Err(e) => {
-///         // This can fail for multiple reason, most common being privileges.
-///         eprintln!("Cannot get fd due to {e}");
-///         
-///     }
-/// }
 /// ```
 pub fn read_with_fid(fanotify_fd: RawFd) -> Result<Vec<fanotify_event_with_fid>, FanotifyError> {
-    let mut vec = Vec::new();
+    let len;
     unsafe {
-        let buffer =
-            libc::malloc((FAN_EVENT_METADATA_LEN + FAN_EVENT_INFO_FID_LEN) * FAN_EVENT_BUFFER_LEN);
-
-        // allocation may fail due to limited memory.
-        if buffer.is_null() {
-            return Err(FanotifyError::Read(
-                Error::last_os_error().raw_os_error().unwrap_or_default(),
-            ));
+        match FAN_EVENT_BUFFER_LEN.lock() {
+            Ok(value) => {
+                len = *value;
+            }
+            Err(e) => {
+                eprintln!("{e}");
+                return Err(FanotifyError::Read(libc::ENOMEM));
+            }
         }
-        let sizeof = libc::read(
-            fanotify_fd,
-            buffer,
-            FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN,
-        );
-        if sizeof != libc::EAGAIN as isize && sizeof > 0 {
-            let src = slice::from_raw_parts(
-                buffer as *mut fanotify_event_with_fid,
-                sizeof as usize / (FAN_EVENT_METADATA_LEN + FAN_EVENT_INFO_FID_LEN),
-            );
-            vec = src.to_vec();
-        }
-        libc::free(buffer);
     }
-    Ok(vec)
+    let mut buff: Vec<fanotify_event_with_fid> = Vec::with_capacity(len);
+
+    let sizeof;
+    unsafe {
+        sizeof = libc::read(
+            fanotify_fd,
+            buff.as_mut_ptr() as *mut c_void,
+            FAN_EVENT_METADATA_FID_LEN * len,
+        );
+    }
+
+    if sizeof == -1 {
+        return Err(FanotifyError::Read(
+            Error::last_os_error().raw_os_error().unwrap_or_default(),
+        ));
+    }
+
+    unsafe {
+        buff.set_len(sizeof as usize / FAN_EVENT_METADATA_FID_LEN);
+    }
+    Ok(buff)
 }
 
 /// This function attempts to read from a file descriptor `fanotify_fd`
@@ -423,63 +430,45 @@ pub fn read_with_fid(fanotify_fd: RawFd) -> Result<Vec<fanotify_event_with_fid>,
 /// # Argument
 /// * `fd` - file descriptor returned by [`init()`]  
 /// * `process_metadata` - Function / Closure for processing [`fanotify_event_with_fid`].
-///
-/// # Example
-/// This example may throw error due to absence of `CAP_SYS_ADMIN` [capabilitity](https://man7.org/linux/man-pages/man7/capabilities.7.html)
-/// ```rust
-/// # use naughtyfy::flags::*;
-/// # use naughtyfy::types::*;
-/// # use naughtyfy::api::*;
-/// fn procedure(md: &fanotify_event_with_fid) {
-///     println!("{md:#?}");
-/// }
-///
-/// fn main() {
-///     let fd = init(FAN_CLASS_NOTIF | FAN_NONBLOCK | FAN_REPORT_DFID_NAME, 0);
-///      match fd {
-///          Ok(fd) => {
-///              let m = mark(fd, FAN_MARK_ADD | FAN_MARK_ONLYDIR,
-///                               FAN_CREATE | FAN_ONDIR,
-///                               AT_FDCWD, "./");
-///              let res = read_with_fid_do(fd, procedure);
-///              assert!(res.is_ok());
-///          }
-///          Err(e) => {
-///              // This can fail for multiple reason, most common being privileges.
-///              eprintln!("Cannot get fd due to {e}");
-///              
-///          }
-///      }
-/// }
 /// ```
 pub fn read_with_fid_do(
     fanotify_fd: RawFd,
     process_metadata_fid: fn(&fanotify_event_with_fid),
 ) -> Result<(), FanotifyError> {
+    let len;
     unsafe {
-        let buffer =
-            libc::malloc((FAN_EVENT_METADATA_LEN + FAN_EVENT_INFO_FID_LEN) * FAN_EVENT_BUFFER_LEN);
-
-        // allocation may fail due to limited memory.
-        if buffer.is_null() {
-            return Err(FanotifyError::Init(
-                Error::last_os_error().raw_os_error().unwrap_or_default(),
-            ));
-        }
-        let sizeof = libc::read(
-            fanotify_fd,
-            buffer,
-            FAN_EVENT_METADATA_LEN * FAN_EVENT_BUFFER_LEN,
-        );
-        if sizeof != libc::EAGAIN as isize && sizeof > 0 {
-            for meta_fid in slice::from_raw_parts(
-                buffer as *mut fanotify_event_with_fid,
-                sizeof as usize / (FAN_EVENT_METADATA_LEN + FAN_EVENT_INFO_FID_LEN),
-            ) {
-                process_metadata_fid(meta_fid);
+        match FAN_EVENT_BUFFER_LEN.lock() {
+            Ok(value) => {
+                len = *value;
+            }
+            Err(e) => {
+                eprintln!("{e}");
+                return Err(FanotifyError::Read(libc::ENOMEM));
             }
         }
-        libc::free(buffer);
+    }
+    let mut buff: Vec<fanotify_event_with_fid> = Vec::with_capacity(len);
+    let sizeof;
+    unsafe {
+        // `libc::read()` is unsafe
+        sizeof = libc::read(
+            fanotify_fd,
+            buff.as_mut_ptr() as *mut c_void,
+            FAN_EVENT_METADATA_FID_LEN * len,
+        );
+    }
+    if sizeof == -1 {
+        return Err(FanotifyError::Read(
+            Error::last_os_error().raw_os_error().unwrap_or_default(),
+        ));
+    }
+
+    // Vec.set_len() is unsafe operation. len must be less than capacity.
+    unsafe {
+        buff.set_len(sizeof as usize / FAN_EVENT_METADATA_FID_LEN);
+    }
+    for event in &buff {
+        process_metadata_fid(event);
     }
     Ok(())
 }
@@ -520,7 +509,7 @@ pub fn read_with_fid_do(
 /// # use naughtyfy::flags::*;
 /// # use naughtyfy::types::*;
 /// # use naughtyfy::api::*;
-/// let fd = init(FAN_CLOEXEC | FAN_CLASS_CONTENT | FAN_NONBLOCK,
+/// let fd = init(FAN_CLOEXEC | FAN_CLASS_CONTENT,
 ///                         O_RDONLY | O_LARGEFILE);
 /// match fd {
 ///     Ok(fd) => {
