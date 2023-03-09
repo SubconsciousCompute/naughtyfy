@@ -385,7 +385,6 @@ pub fn read_do(
 ///
 /// # Argument
 /// * `fd` - file descriptor returned by [`init()`]  
-/// ```
 pub fn read_with_fid(fanotify_fd: RawFd) -> Result<Vec<fanotify_event_with_fid>, FanotifyError> {
     let len;
     unsafe {
@@ -430,7 +429,6 @@ pub fn read_with_fid(fanotify_fd: RawFd) -> Result<Vec<fanotify_event_with_fid>,
 /// # Argument
 /// * `fd` - file descriptor returned by [`init()`]  
 /// * `process_metadata` - Function / Closure for processing [`fanotify_event_with_fid`].
-/// ```
 pub fn read_with_fid_do(
     fanotify_fd: RawFd,
     process_metadata_fid: fn(&fanotify_event_with_fid),
