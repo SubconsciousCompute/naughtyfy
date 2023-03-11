@@ -2,12 +2,13 @@ use naughtyfy::api::*;
 use naughtyfy::flags::*;
 use naughtyfy::types::*;
 
+/// What to do with the event?
 fn procedure(md: &fanotify_event_with_fid) {
     println!("{md:#?}");
 }
 
-// Run this example with sudo privilages and create
-// a directory in root of this project to see results
+/// Run this example with sudo privilages and create
+/// a directory in root of this project to see results
 fn main() {
     let fd = init(FAN_CLASS_NOTIF | FAN_REPORT_DFID_NAME, 0);
     match fd {

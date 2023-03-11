@@ -140,6 +140,9 @@ pub struct fanotify_event_info_fid {
     file_handle: __u8,
 }
 
+/// A struct that holds both [`fanotify_event_metadata`] and [`fanotify_event_info_fid`]
+/// in sequence for reading from buffer when fanotify is initialized with
+/// [`FAN_REPORT_FID`] or [`FAN_REPORT_DIR_FID`] flag
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct fanotify_event_with_fid {

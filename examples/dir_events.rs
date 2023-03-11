@@ -1,6 +1,9 @@
 use naughtyfy::api::*;
 use naughtyfy::flags::*;
 
+/// Using naughtyfy to report(print) all
+/// file access, modify, close, open events (for files)
+/// on a specific dir recursively
 fn main() {
     let fd = init(
         FAN_CLOEXEC

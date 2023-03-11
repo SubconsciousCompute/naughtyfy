@@ -239,9 +239,13 @@ fn close_code_desc(code: i32) -> String {
 pub enum FanotifyError {
     /// Error produced by [`init()`]
     Init(i32),
+    /// Error produced by [`mark()`]
     Mark(i32),
+    /// Error produced by [`read()`]
     Read(i32),
+    /// Error produced by [`write()`]
     Write(i32),
+    /// Error produced by [`close()`]
     Close(i32),
 }
 impl Error for FanotifyError {}

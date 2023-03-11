@@ -1,6 +1,8 @@
 use naughtyfy::api::*;
 use naughtyfy::flags::*;
 
+/// Using naughtyfy to report(print) all 
+/// file open events.
 fn main() {
     let fd = init(FAN_CLASS_NOTIF, O_RDONLY);
     if fd.is_err() {
