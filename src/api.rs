@@ -497,21 +497,25 @@ pub fn read_with_fid_do(
 /// on Linux.
 ///
 /// # Argument
-/// * `fd` - This is the file descriptor from the structure [`fanotify_event_metadata`].
-/// * `response` - This field indicates whether or not the permission is to
-///                be granted.  Its value must be either FAN_ALLOW to allow
-///                the file operation or FAN_DENY to deny the file operation.
+/// * `fd` - This is the file descriptor that [`init()`] returned.
+/// * `response` - This is a struct of type [`fanotify_response`]
+///                 that specifies how to deal with the request.
 ///
 /// # Example
 /// ```rust
 /// # use naughtyfy::flags::*;
 /// # use naughtyfy::types::*;
 /// # use naughtyfy::api::*;
-/// let fd = init(FAN_CLOEXEC | FAN_CLASS_CONTENT,
-///                         O_RDONLY | O_LARGEFILE);
+/// let fd = init(FAN_CLOEXEC | FAN_CLASS_CONTENT, O_RDONLY | O_LARGEFILE);
 /// match fd {
 ///     Ok(fd) => {
-///         let m = mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT, FAN_ACCESS, AT_FDCWD, "./");
+///         let m = mark(
+///             fd,
+///             FAN_MARK_ADD | FAN_MARK_MOUNT,
+///             FAN_OPEN_PERM | FAN_CLOSE_WRITE,
+///             AT_FDCWD,
+///             "/tmp",
+///         );
 ///         assert!(m.is_ok());
 ///         assert!(fd >= 0);
 ///         
@@ -519,8 +523,16 @@ pub fn read_with_fid_do(
 ///         if events.len() > 1 {
 ///             for event in events {
 ///                 println!("{event:#?}");
-///
-///                 let res = write(event.fd,FAN_ALLOW);
+///                 write(
+///                     fd,
+///                     &fanotify_response {
+///                         fd: event.fd,
+///                         // Allowig all events
+///                         response: FAN_ALLOW,
+///                     },
+///                 )
+///                 .unwrap();
+///                 close(event.fd);
 ///             }
 ///         }
 ///         close(fd);
@@ -532,12 +544,11 @@ pub fn read_with_fid_do(
 ///     }
 /// }
 /// ```
-pub fn write(fd: RawFd, response: u32) -> Result<isize, FanotifyError> {
-    let res = &fanotify_response { fd, response };
+pub fn write(fd: RawFd, response: &fanotify_response) -> Result<isize, FanotifyError> {
     unsafe {
         match libc::write(
             fd,
-            res as *const fanotify_response as *const libc::c_void,
+            response as *const fanotify_response as *const libc::c_void,
             FAN_WRITE_RESPONSE_LEN,
         ) {
             -1 => Err(FanotifyError::Write(
