@@ -38,6 +38,8 @@ impl Fd {
         std::fs::read_link(format!("/proc/self/fd/{}", fd))
     }
 
+    /// Check if the fd is valid or not
+    #[inline]
     pub fn is_valid(&self) -> bool {
         self.inner >= 0
     }
