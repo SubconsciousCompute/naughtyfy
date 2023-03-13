@@ -1,14 +1,3 @@
-# 📁 Naughtyfy
-
-A modern fanotify wrapper.
-
-Note: This is still under development.
-
-Feel free to open issues on the repo.
-
-## Example
-
-```rust
 use naughtyfy::api::*;
 use naughtyfy::flags::*;
 
@@ -35,22 +24,3 @@ fn main() {
         }
     }
 }
-```
-
-## Docs
-
-- [Docs.rs](https://docs.rs/naughtyfy/latest/naughtyfy/)
-
-## Goals
-
-- Safe
-- Less overhead
-- Documented
-- Desciptive errors
-  
-Even though it's not designed to be blazzingly fast but is comparable. Will get better with further updates.
-
-## Thanks
-
-- [fanotify and it's manpage](https://man7.org/linux/man-pages/man7/fanotify.7.html)
-- [fanotify-rs](https://github.com/Percivalll/fanotify-rs)

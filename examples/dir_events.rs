@@ -1,5 +1,6 @@
 use naughtyfy::api::*;
 use naughtyfy::flags::*;
+use naughtyfy::types::Fd;
 
 /// Using naughtyfy to report(print) all
 /// file access, modify, close, open events (for files)
@@ -17,7 +18,7 @@ fn main() {
     if fd.is_err() {
         eprintln!("Encountered err due to {fd:?}");
     }
-    let fd = fd.unwrap();
+    let fd = fd.as_ref().unwrap();
     let status = mark(
         fd,
         FAN_MARK_ADD | FAN_MARK_MOUNT,
@@ -32,7 +33,7 @@ fn main() {
 
     loop {
         read_do(fd, |md| {
-            let path = std::fs::read_link(format!("/proc/self/fd/{}", md.fd)).unwrap_or_default();
+            let path = Fd::path_from_rawfd(md.fd);
             println!("{:?} at {:?}", md.mask, path);
         })
         .unwrap();

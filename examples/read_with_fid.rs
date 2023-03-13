@@ -10,7 +10,7 @@ fn procedure(md: &fanotify_event_with_fid) {
 /// Run this example with sudo privilages and create
 /// a directory in root of this project to see results
 fn main() {
-    let fd = init(FAN_CLASS_NOTIF | FAN_REPORT_DFID_NAME, 0);
+    let fd = &init(FAN_CLASS_NOTIF | FAN_REPORT_DFID_NAME, 0);
     match fd {
         Ok(fd) => {
             mark(

@@ -1,16 +1,16 @@
 use naughtyfy::api::*;
 use naughtyfy::flags::*;
 
-/// Using naughtyfy to report(print) all 
+/// Using naughtyfy to report(print) all
 /// file open events.
 fn main() {
-    let fd = init(FAN_CLASS_NOTIF, O_RDONLY);
+    let fd = &init(FAN_CLASS_NOTIF, O_RDONLY);
     if fd.is_err() {
         eprintln!("Encountered err due to {fd:?}");
     }
-    let fd = fd.unwrap();
+    let fd = fd.as_ref().unwrap();
     let status = mark(
-        fd,
+        &fd,
         FAN_MARK_ADD | FAN_MARK_MOUNT,
         FAN_OPEN | FAN_EVENT_ON_CHILD,
         AT_FDCWD,
@@ -24,10 +24,7 @@ fn main() {
 
     loop {
         // read_do(fd, print_meta).unwrap();
-        let data = read(fd).unwrap();
+        let data = read(&fd).unwrap();
         println!("{:#?}", data);
-        data.iter().for_each(|e| {
-            close(e.fd).unwrap();
-        });
     }
 }
