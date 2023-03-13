@@ -17,7 +17,7 @@
 //! # use naughtyfy::flags::*;
 //! # use naughtyfy::types::*;
 //! # use naughtyfy::api::*;
-//! let fd = init(FAN_CLOEXEC | FAN_CLASS_CONTENT ,
+//! let fd = &init(FAN_CLOEXEC | FAN_CLASS_CONTENT ,
 //!                         O_RDONLY | O_LARGEFILE);
 //! match fd {
 //!     Ok(fd) => {
@@ -27,8 +27,6 @@
 //!             println!("{:#?}",event);
 //!             close(event.fd);
 //!         }
-//!         let status = close(fd);
-//!         assert!(status.is_ok());
 //!     }
 //!     Err(e) => {
 //!         // This can fail for multiple reason, most common being privileges.

@@ -3,6 +3,7 @@
 
 use libc::{__s32, __u16, __u32, __u64, __u8, c_int};
 use std::ffi::OsStr;
+use std::os::fd::RawFd;
 
 // For documentaton linking
 #[allow(unused_imports)]
@@ -10,8 +11,75 @@ use crate::api::*;
 #[allow(unused_imports)]
 use crate::flags::*;
 
+/// An inter convertable between [`RawFd`] struct that hold fd and provides
+/// fd-related functionality with auto-close using drop trait
+#[derive(Debug, Clone)]
+pub struct Fd {
+    /// [`RawFd`] type that holds the file descriptors.
+    inner: RawFd,
+}
+
+impl Fd {
+    /// Constructs a new [`Fd`] using [`RawFd`]
+    #[inline]
+    pub fn new(fd: RawFd) -> Self {
+        Self { inner: fd }
+    }
+
+    /// Get the [`std::path::PathBuf`] related to the fd.
+    #[inline]
+    pub fn path(&self) -> Result<std::path::PathBuf, std::io::Error> {
+        std::fs::read_link(format!("/proc/self/fd/{}", self.inner))
+    }
+
+    /// Get the [`std::path::PathBuf`] related to the [`RawFd`] provided.
+    #[inline]
+    pub fn path_from_rawfd(fd: RawFd) -> Result<std::path::PathBuf, std::io::Error> {
+        std::fs::read_link(format!("/proc/self/fd/{}", fd))
+    }
+
+    /// Check if the fd is valid or not
+    #[inline]
+    pub fn is_valid(&self) -> bool {
+        self.inner >= 0
+    }
+}
+
+/// Closing file desriptor
+impl Drop for Fd {
+    fn drop(&mut self) {
+        if let Err(e) = close(self.inner) {
+            eprintln!("(fd dropper)Fd :: {}\nErr :: {}", self.inner, e);
+        }
+    }
+}
+
+/// [`RawFd`] -> [`Fd`] convertion
+impl From<RawFd> for Fd {
+    /// Construct [`Fd`] from [`RawFd`]
+    fn from(fd: RawFd) -> Self {
+        Self { inner: fd }
+    }
+}
+
+/// [`RawFd`] -> &[`Fd`] convertion
+impl From<&Fd> for RawFd {
+    /// Converts [`RawFd`] to [`Fd`]
+    fn from(val: &Fd) -> Self {
+        val.inner
+    }
+}
+
+/// [`Fd`] -> [`RawFd`] conversion
+impl From<Fd> for RawFd {
+    /// Converts [`RawFd`] to [`Fd`]
+    fn from(fd: Fd) -> Self {
+        fd.inner
+    }
+}
+
 /// After a successful read(2), the read buffer contains the following structure
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 #[repr(C)]
 pub struct fanotify_event_metadata {
     /// This is the length of the data for the current event and
@@ -57,6 +125,17 @@ pub struct fanotify_event_metadata {
     pub pid: __s32,
 }
 
+/// Droping bounded file description
+impl Drop for fanotify_event_metadata {
+    fn drop(&mut self) {
+        if self.fd >= 0 {
+            if let Err(e) = close(self.fd) {
+                eprintln!("Fd :: {}\nErr :: {}", self.fd, e);
+            }
+        }
+    }
+}
+
 /// To be used within [`fanotify_event_info_fid`]
 #[derive(Debug, Clone, Copy)]
 #[allow(non_camel_case_types)]
@@ -66,7 +145,7 @@ struct __kernel_fsid_t {
 }
 
 /// This is the header part of [`fanotify_event_info_fid`]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 #[repr(C)]
 pub struct fanotify_event_info_header {
     pub info_type: __u8,
@@ -81,7 +160,7 @@ pub struct fanotify_event_info_header {
 /// additional information records of the structure detailed below
 /// following the generic [`fanotify_event_metadata`] structure within
 /// the read buffer:
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 #[repr(C)]
 pub struct fanotify_event_info_fid {
     /// It is a generic header that contains information used to

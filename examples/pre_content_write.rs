@@ -5,13 +5,13 @@ use naughtyfy::types::*;
 /// Using naughtyfy to allow all but `/tmp/tmp.txt`
 /// file open event on system.
 fn main() {
-    let fd = init(FAN_CLOEXEC | FAN_CLASS_CONTENT, O_RDONLY | O_LARGEFILE);
+    let fd = &init(FAN_CLOEXEC | FAN_CLASS_CONTENT, O_RDONLY | O_LARGEFILE);
     if fd.is_err() {
         eprintln!("Encountered err due to {fd:?}");
     }
-    let fd = fd.unwrap();
+    let fd = fd.as_ref().unwrap();
     let status = mark(
-        fd,
+        &fd,
         FAN_MARK_ADD | FAN_MARK_MOUNT,
         FAN_OPEN_PERM | FAN_CLOSE_WRITE,
         AT_FDCWD,
@@ -24,7 +24,7 @@ fn main() {
 
     loop {
         // read_do(fd, print_meta).unwrap();
-        let data = read(fd).unwrap();
+        let data = read(&fd).unwrap();
         data.iter().for_each(|e| {
             if e.fd >= 0 {
                 let path =
@@ -33,7 +33,7 @@ fn main() {
                     if path.to_str().unwrap() == "/tmp/tmp.txt" {
                         println!("Denied: {path:?}");
                         write(
-                            fd,
+                            &fd,
                             &fanotify_response {
                                 fd: e.fd,
                                 response: FAN_DENY,
@@ -43,7 +43,7 @@ fn main() {
                     } else {
                         println!("Allowed: {path:?}");
                         write(
-                            fd,
+                            &fd,
                             &fanotify_response {
                                 fd: e.fd,
                                 response: FAN_ALLOW,
