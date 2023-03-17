@@ -1,4 +1,5 @@
 //! 1-1 mapping of all flags that [fanotify.h](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/fanotify.h) has <br>
+//! This also includes all necessary falgs used in fanotify
 
 extern crate libc;
 // For documentaton linking
