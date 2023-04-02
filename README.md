@@ -2,7 +2,7 @@
 
 A modern fanotify wrapper.
 
-~~Note: This is still under development.~~
+~~Note: This is still under development.~~ <br>
 I guess it's in usable state, Open issue
 for any feature/bug.
 
@@ -51,8 +51,8 @@ fn main() {
 Even though it's not designed to be blazzingly fast but is comparable. Will get better with further updates.
 
 ## TODO
-[] Add more example
-[] Higher level API maybe?
+- [ ] Add more example
+- [ ] Higher level API maybe?
 
 ## Thanks
 
