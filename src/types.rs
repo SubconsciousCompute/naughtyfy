@@ -145,6 +145,7 @@ struct __kernel_fsid_t {
 }
 
 /// This is the header part of [`fanotify_event_info_fid`]
+#[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct fanotify_event_info_header {
@@ -160,6 +161,7 @@ pub struct fanotify_event_info_header {
 /// additional information records of the structure detailed below
 /// following the generic [`fanotify_event_metadata`] structure within
 /// the read buffer:
+#[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct fanotify_event_info_fid {
@@ -222,6 +224,7 @@ pub struct fanotify_event_info_fid {
 /// A struct that holds both [`fanotify_event_metadata`] and [`fanotify_event_info_fid`]
 /// in sequence for reading from buffer when fanotify is initialized with
 /// [`FAN_REPORT_FID`] or [`FAN_REPORT_DIR_FID`] flag
+#[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct fanotify_event_with_fid {
@@ -234,9 +237,11 @@ pub struct fanotify_event_with_fid {
     pub fid: fanotify_event_info_fid,
 }
 
+/// A struct that creates a response to be written to a
+/// `PERM` type flag (Eg: [`FAN_OPEN_PERM`])
+#[allow(non_camel_case_types)]
 #[derive(Debug)]
 #[repr(C)]
-/// It is used to control file access.
 pub struct fanotify_response {
     /// This is the file descriptor from the structure
     /// fanotify_event_metadata.
@@ -245,6 +250,17 @@ pub struct fanotify_response {
     /// be granted.  Its value must be either [`FAN_ALLOW`] to allow
     /// the file operation or [`FAN_DENY`] to deny the file operation.
     pub response: __u32,
+}
+
+impl fanotify_response {
+    /// Create a new response using [`Fd`] and `PERM`
+    /// type from flags
+    pub fn new(fd: &Fd, response: __u32) -> Self {
+        fanotify_response {
+            fd: fd.inner,
+            response,
+        }
+    }
 }
 
 /// Converts the implemented types to [`OsStr`] using `as_os_str()` method. <br>
