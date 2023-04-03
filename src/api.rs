@@ -1,15 +1,15 @@
 //! Low level function mapping for fanotify
 
+use crate::{errors::*, types::*};
 use libc::c_void;
+use std::{
+    ffi::CString,
+    io::Error,
+    mem,
+    os::{fd::RawFd, unix::ffi::OsStrExt},
+};
 
-use crate::errors::*;
-use crate::types::*;
-use std::ffi::CString;
-use std::io::Error;
-use std::mem;
-use std::os::fd::RawFd;
-use std::os::unix::ffi::OsStrExt;
-
+// Used for docs test
 #[allow(unused_imports)]
 use crate::flags::*;
 
@@ -558,8 +558,6 @@ pub fn write(fd: &Fd, response: &fanotify_response) -> Result<isize, FanotifyErr
 ///
 /// # Argument
 /// * `fd` - file descriptor in raw form ([`RawFd`])`
-///
-/// ```
 pub fn close(fd: RawFd) -> Result<(), FanotifyError> {
     unsafe {
         match libc::close(fd) {

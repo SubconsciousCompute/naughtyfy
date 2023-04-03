@@ -7,7 +7,7 @@ license = "AGPL-3.0-only"
 repository = "https://github.com/SubconsciousCompute/naughtyfy.git"
 documentation = "https://docs.rs/naughtyfy"
 authors = ["Tanveer Raza <tanveerraza789@gmail.com>"]
-version = "0.0.10"
+version = "0.1.1"
 edition = "2021"
 
 
