@@ -3,7 +3,8 @@
 
 use libc::{__s32, __u16, __u32, __u64, __u8, c_int};
 use std::ffi::OsStr;
-use std::os::fd::RawFd;
+use std::os::fd::AsRawFd;
+pub use std::os::fd::OwnedFd as Fd;
 
 // For documentaton linking
 #[allow(unused_imports)]
@@ -11,75 +12,9 @@ use crate::api::*;
 #[allow(unused_imports)]
 use crate::flags::*;
 
-/// An inter convertable between [`RawFd`] struct that hold fd and provides
-/// fd-related functionality with auto-close using drop trait
-#[derive(Debug, Clone)]
-pub struct Fd {
-    /// [`RawFd`] type that holds the file descriptors.
-    inner: RawFd,
-}
-
-impl Fd {
-    /// Constructs a new [`Fd`] using [`RawFd`]
-    #[inline]
-    pub fn new(fd: RawFd) -> Self {
-        Self { inner: fd }
-    }
-
-    /// Get the [`std::path::PathBuf`] related to the fd.
-    #[inline]
-    pub fn path(&self) -> Result<std::path::PathBuf, std::io::Error> {
-        std::fs::read_link(format!("/proc/self/fd/{}", self.inner))
-    }
-
-    /// Get the [`std::path::PathBuf`] related to the [`RawFd`] provided.
-    #[inline]
-    pub fn path_from_rawfd(fd: RawFd) -> Result<std::path::PathBuf, std::io::Error> {
-        std::fs::read_link(format!("/proc/self/fd/{}", fd))
-    }
-
-    /// Check if the fd is valid or not
-    #[inline]
-    pub fn is_valid(&self) -> bool {
-        self.inner >= 0
-    }
-}
-
-/// Closing file desriptor
-impl Drop for Fd {
-    fn drop(&mut self) {
-        if let Err(e) = close(self.inner) {
-            eprintln!("(fd dropper)Fd :: {}\nErr :: {}", self.inner, e);
-        }
-    }
-}
-
-/// [`RawFd`] -> [`Fd`] convertion
-impl From<RawFd> for Fd {
-    /// Construct [`Fd`] from [`RawFd`]
-    fn from(fd: RawFd) -> Self {
-        Self { inner: fd }
-    }
-}
-
-/// [`RawFd`] -> &[`Fd`] convertion
-impl From<&Fd> for RawFd {
-    /// Converts [`RawFd`] to [`Fd`]
-    fn from(val: &Fd) -> Self {
-        val.inner
-    }
-}
-
-/// [`Fd`] -> [`RawFd`] conversion
-impl From<Fd> for RawFd {
-    /// Converts [`RawFd`] to [`Fd`]
-    fn from(fd: Fd) -> Self {
-        fd.inner
-    }
-}
-
 /// After a successful read(2), the read buffer contains the following structure
 #[derive(Debug, Clone)]
+#[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct fanotify_event_metadata {
     /// This is the length of the data for the current event and
@@ -257,7 +192,7 @@ impl fanotify_response {
     /// type from flags
     pub fn new(fd: &Fd, response: __u32) -> Self {
         fanotify_response {
-            fd: fd.inner,
+            fd: fd.as_raw_fd(),
             response,
         }
     }
@@ -301,5 +236,33 @@ impl Path for str {
 impl Path for String {
     fn as_os_str(&self) -> &OsStr {
         OsStr::new(self.as_str())
+    }
+}
+
+/// Trait that adds path conversion to [`Fd`] type
+pub trait FdToPath {
+    fn path(&self) -> Result<std::path::PathBuf, std::io::Error>;
+    fn path_from_rawfd(fd: std::os::fd::RawFd) -> Result<std::path::PathBuf, std::io::Error>;
+    fn is_valid(&self) -> bool;
+}
+
+/// Adding path conversion ability to [`Fd`] type
+impl FdToPath for Fd {
+    /// Get the [`std::path::PathBuf`] related to the fd.
+    #[inline]
+    fn path(&self) -> Result<std::path::PathBuf, std::io::Error> {
+        std::fs::read_link(format!("/proc/self/fd/{}", self.as_raw_fd()))
+    }
+
+    /// Get the [`std::path::PathBuf`] related to the [`RawFd`] provided.
+    #[inline]
+    fn path_from_rawfd(fd: std::os::fd::RawFd) -> Result<std::path::PathBuf, std::io::Error> {
+        std::fs::read_link(format!("/proc/self/fd/{}", fd))
+    }
+
+    /// Check if the fd is valid or not
+    #[inline]
+    fn is_valid(&self) -> bool {
+        self.as_raw_fd() >= 0
     }
 }
