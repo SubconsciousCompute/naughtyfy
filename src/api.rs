@@ -6,7 +6,10 @@ use std::{
     ffi::CString,
     io::Error,
     mem,
-    os::{fd::RawFd, unix::ffi::OsStrExt},
+    os::{
+        fd::{AsRawFd, FromRawFd, OwnedFd as Fd},
+        unix::ffi::OsStrExt,
+    },
 };
 
 // Used for docs test
@@ -96,6 +99,7 @@ pub static mut FAN_EVENT_BUFFER_LEN: std::sync::Mutex<usize> = std::sync::Mutex:
 /// ```rust
 /// # use naughtyfy::flags::*;
 /// # use naughtyfy::api::*;
+/// # use naughtyfy::types::*;
 /// let fd = init(FAN_CLASS_NOTIF | FAN_NONBLOCK, O_RDONLY);
 /// match fd {
 ///     Ok(fd) => {
@@ -114,7 +118,7 @@ pub fn init(flags: u32, event_f_flags: u32) -> Result<Fd, FanotifyError> {
             -1 => Err(FanotifyError::Init(
                 Error::last_os_error().raw_os_error().unwrap_or_default(),
             )),
-            fd => Ok(fd.into()),
+            fd => Ok(Fd::from_raw_fd(fd)),
         }
     }
 }
@@ -214,7 +218,7 @@ pub fn mark<P: ?Sized + Path>(
 ) -> Result<(), FanotifyError> {
     let path = CString::new(path.as_os_str().as_bytes()).unwrap_or_default();
     unsafe {
-        match libc::fanotify_mark(fd.into(), flags, mask, dirfd, path.as_ptr()) {
+        match libc::fanotify_mark(fd.as_raw_fd(), flags, mask, dirfd, path.as_ptr()) {
             0 => Ok(()),
             _ => Err(FanotifyError::Mark(
                 Error::last_os_error().raw_os_error().unwrap_or_default(),
@@ -274,7 +278,7 @@ pub fn read(fd: &Fd) -> Result<Vec<fanotify_event_metadata>, FanotifyError> {
     unsafe {
         // `libc::read()` is unsafe
         sizeof = libc::read(
-            fd.into(),
+            fd.as_raw_fd(),
             buff.as_mut_ptr() as *mut c_void,
             FAN_EVENT_METADATA_LEN * len,
         );
@@ -351,7 +355,7 @@ pub fn read_do(
     unsafe {
         // `libc::read()` is unsafe
         sizeof = libc::read(
-            fd.into(),
+            fd.as_raw_fd(),
             buff.as_mut_ptr() as *mut c_void,
             FAN_EVENT_METADATA_LEN * len,
         );
@@ -400,7 +404,7 @@ pub fn read_with_fid(fd: &Fd) -> Result<Vec<fanotify_event_with_fid>, FanotifyEr
     let sizeof;
     unsafe {
         sizeof = libc::read(
-            fd.into(),
+            fd.as_raw_fd(),
             buff.as_mut_ptr() as *mut c_void,
             FAN_EVENT_METADATA_FID_LEN * len,
         );
@@ -447,7 +451,7 @@ pub fn read_with_fid_do(
     unsafe {
         // `libc::read()` is unsafe
         sizeof = libc::read(
-            fd.into(),
+            fd.as_raw_fd(),
             buff.as_mut_ptr() as *mut c_void,
             FAN_EVENT_METADATA_FID_LEN * len,
         );
@@ -542,7 +546,7 @@ pub fn read_with_fid_do(
 pub fn write(fd: &Fd, response: &fanotify_response) -> Result<isize, FanotifyError> {
     unsafe {
         match libc::write(
-            fd.into(),
+            fd.as_raw_fd(),
             response as *const fanotify_response as *const libc::c_void,
             FAN_WRITE_RESPONSE_LEN,
         ) {
@@ -558,7 +562,7 @@ pub fn write(fd: &Fd, response: &fanotify_response) -> Result<isize, FanotifyErr
 ///
 /// # Argument
 /// * `fd` - file descriptor in raw form ([`RawFd`])`
-pub fn close(fd: RawFd) -> Result<(), FanotifyError> {
+pub fn close(fd: std::os::fd::RawFd) -> Result<(), FanotifyError> {
     unsafe {
         match libc::close(fd) {
             0 => Ok(()),

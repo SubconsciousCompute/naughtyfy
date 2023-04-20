@@ -1,6 +1,7 @@
 use naughtyfy::api::*;
 use naughtyfy::flags::*;
 use naughtyfy::types::Fd;
+use naughtyfy::types::FdToPath;
 
 /// Using naughtyfy to report(print) all
 /// file access, modify, close, open events (for files)

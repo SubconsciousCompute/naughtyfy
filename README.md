@@ -2,9 +2,7 @@
 
 A modern fanotify wrapper.
 
-~~Note: This is still under development.~~ <br>
-I guess it's in usable state, Open issue
-for any feature/bug.
+Open issue for any feature/bug.
 
 ## Example
 
@@ -48,10 +46,10 @@ fn main() {
 - Documented
 - Desciptive errors
 - Only 1 dependency (libc)
-
-Even though it's not designed to be blazzingly fast but is comparable. Will get better with further updates.
+- and, Fast ofc.
 
 ## TODO
+
 - [ ] Add more example
 - [ ] Higher level API maybe?
 
